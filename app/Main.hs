@@ -51,11 +51,15 @@ main2 = do
     -- BS.putStr $ r ^. responseBody
     return ()
 
-main3 :: IO ()
-main3 = do
-    UserData {..} <- getUserData
-    thuEnv <- initThuEnv username password
-    runStderrLoggingT (runReaderT loginWebVPN thuEnv)
+-- main3 :: IO ()
+-- main3 = do
+--     UserData {..} <- getUserData
+--     thuEnv <- initThuEnv username password True
+--     runStderrLoggingT (runReaderT loginWebVPN thuEnv)
 
 main :: IO ()
-main = main3
+main = withWebVPN getInput sayHello where
+    getInput = runInputT defaultSettings $ do
+        (Just username) <- getInputLine "请输入学号: "
+        (Just password) <- getPassword Nothing "请输入密码: "
+        pure (username, password)

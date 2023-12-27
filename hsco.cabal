@@ -30,6 +30,8 @@ common common-options
                      , monad-logger
                      , binary
                      , encoding
+                     , exceptions
+                     , parsec
   
   mixins:              base hiding (Prelude)
                      , relude (Relude as Prelude)
@@ -55,6 +57,9 @@ library
   exposed-modules:     Hsco
                      -- , Hsco.Thu
   other-modules:       Hsco.Thu
+                     , Hsco.Thu.Internal
+                     , Hsco.Thu.WebVPN
+                     , Hsco.Thu.Info
 executable hsco
   import:              common-options
   hs-source-dirs:      app
