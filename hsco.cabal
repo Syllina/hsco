@@ -14,14 +14,22 @@ category:            mit, program
 build-type:          Simple
 extra-doc-files:     README.md
                      CHANGELOG.md
-tested-with:         GHC == 8.8.3
+-- tested-with:         GHC == 8.8.3
 
 source-repository head
   type:                git
   location:            https://github.com/Syllina/hsco.git
 common common-options
-  build-depends:       base ^>= 4.13.0.0
+  build-depends:       base ^>= 4.17.0.0
                      , relude
+                     , wreq
+                     , lens
+                     , bytestring
+                     , scalpel
+                     , haskeline
+                     , monad-logger
+                     , binary
+                     , encoding
   
   mixins:              base hiding (Prelude)
                      , relude (Relude as Prelude)
@@ -45,6 +53,8 @@ library
   import:              common-options
   hs-source-dirs:      src
   exposed-modules:     Hsco
+                     -- , Hsco.Thu
+  other-modules:       Hsco.Thu
 executable hsco
   import:              common-options
   hs-source-dirs:      app

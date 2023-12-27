@@ -7,8 +7,11 @@ The very least comprehensive personal haskell tool
 -}
 
 module Hsco
-       ( someFunc
+       ( someFunc,
+         module Hsco.Thu
        ) where
+
+import Hsco.Thu
 
 
 someFunc :: IO ()

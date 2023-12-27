@@ -14,9 +14,9 @@ cache:
 
 matrix:
   include:
-  - ghc: 8.8.3
+  - ghc: 9.4.7
   
-  - ghc: 8.8.3
+  - ghc: 9.4.7
     env: STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml"
   
 
