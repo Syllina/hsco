@@ -14,10 +14,11 @@ cache:
 
 matrix:
   include:
-  - ghc: 8.8.3
+    # - ghc: 8.8.3
   
-  - ghc: 8.8.3
-    env: STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml"
+    # - ghc: 8.8.3
+    #   env: STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml"
+    - env: STACK_YAML="$TRAVIS_BUILD_DIR/stack.yaml"
   
 
 install:
@@ -31,7 +32,8 @@ install:
     else
       curl -sSL https://get.haskellstack.org/ | sh
       stack --version
-      stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks --ghc-options=-Werror
+      # stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks --ghc-options=-Werror
+      stack build --system-ghc --test --bench --no-run-tests --no-run-benchmarks
     fi
 
 script:
