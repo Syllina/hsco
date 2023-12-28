@@ -1,6 +1,7 @@
-{-# LANGUAGE RecordWildCards, DeriveAnyClass, OverloadedStrings #-}
+{-# LANGUAGE DeriveAnyClass #-}
 module Hsco.Thu.OAuth (
-    redirectThuLogin,
+    redirectThuLoginCheck,
+    redirectThuLoginOnce,
     ThuOAuthException(..)
 ) where
 
@@ -25,18 +26,29 @@ parseLoginResponse r = runExcept $ do
     let urlRes = scrapeStringLike content (attr "href" "a")
     maybe (throwError UnknownError) (return . unpack) urlRes
 
-getLoginPostData :: ThuEnv -> [FormParam]
-getLoginPostData ThuEnv {..} = ["i_user" := stuID, "i_pass" := stuPwd, "i_captcha" := ("" :: String)]
-
-postThuLogin :: ThuM (Response BS.ByteString)
-postThuLogin = asks getLoginPostData >>=
-                    postThu idLoginURL "/do/off/ui/auth/login/check"
-
-redirectThuLogin :: ThuM (Response BS.ByteString)
-redirectThuLogin = action where
-    action = do
-        r <- postThuLogin
-        let res = parseLoginResponse r
-        either handleParse getThuDirect res
+redirectThuLogin :: String -> (ThuEnv -> [FormParam]) -> ThuM (Response BS.ByteString)
+redirectThuLogin url method = action where
+    action = asks method >>=
+             postThu idLoginURL ("/do/off/ui/auth/login" <> url) >>=
+             pure . parseLoginResponse >>=
+             either handleParse getThuDirect
     handleParse :: ThuOAuthException -> ThuM (Response BS.ByteString)
     handleParse = throwM
+
+redirectThuLoginCheck :: ThuM (Response BS.ByteString)
+redirectThuLoginCheck = redirectThuLogin "/check" getData where
+    getData :: ThuEnv -> [FormParam]
+    getData ThuEnv {..} = [
+            "i_user" := stuID,
+            "i_pass" := stuPwd,
+            "i_captcha" := ("" :: String)
+        ]
+
+redirectThuLoginOnce :: String -> ThuM (Response BS.ByteString)
+redirectThuLoginOnce url = redirectThuLogin url getData where
+    getData :: ThuEnv -> [FormParam]
+    getData ThuEnv {..} = [
+            "i_user" := stuID,
+            "i_pass" := stuPwd,
+            "atOnce" := ("true" :: String)
+        ]

@@ -53,6 +53,8 @@ common common-options
     ghc-options:       -Wmissing-deriving-strategies
 
   default-language:    Haskell2010
+  default-extensions:  OverloadedStrings
+                     , RecordWildCards
 library
   import:              common-options
   hs-source-dirs:      src
@@ -63,6 +65,7 @@ library
                      , Hsco.Thu.WebVPN
                      , Hsco.Thu.Info
                      , Hsco.Thu.OAuth
+                     , Hsco.Thu.Learn
 executable hsco
   import:              common-options
   hs-source-dirs:      app

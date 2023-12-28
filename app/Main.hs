@@ -1,4 +1,3 @@
-{-# LANGUAGE OverloadedStrings, RecordWildCards #-}
 module Main (main) where
 
 import Hsco
@@ -6,7 +5,7 @@ import Hsco
 import System.Console.Haskeline
 
 main5 :: IO ()
-main5 = withWebVPN getInput sayHello where
+main5 = withWebVPN getInput learnHello where
     getInput = runInputT defaultSettings $ do
         (Just username) <- getInputLine "请输入学号: "
         (Just password) <- getPassword Nothing "请输入密码: "

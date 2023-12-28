@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards, OverloadedStrings, NamedFieldPuns, DeriveAnyClass #-}
+{-# LANGUAGE NamedFieldPuns, DeriveAnyClass #-}
 module Hsco.Thu.Internal (
     ThuEnv(..), initThuEnv,
     ThuM,
@@ -7,7 +7,7 @@ module Hsco.Thu.Internal (
 
     URLType(..),
     getThuURL, vpnPrefix,
-    webVPNURL, idLoginURL, info2021URL,
+    webVPNURL, idLoginURL, info2021URL, learnURL,
 
     ThuException(..),
 
@@ -81,6 +81,10 @@ idLoginURL URLVPN = vpnPrefix <> "/77726476706e69737468656265737421f9f30f8834396
 info2021URL :: URLType -> String
 info2021URL URLRaw = getThuURL "info2021"
 info2021URL URLVPN = vpnPrefix <> "/77726476706e69737468656265737421f9f9479375603a01301c9aa596522b208e9cd9c9e383ff3f"
+
+learnURL :: URLType -> String
+learnURL URLRaw = getThuURL "learn"
+learnURL URLVPN = vpnPrefix <> "/77726476706e69737468656265737421fcf2408e297e7c4377068ea48d546d30ca8cc97bcc"
 
 -- getLoginPostData :: ThuEnv -> [FormParam]
 -- getLoginPostData ThuEnv {..} = ["i_user" := stuID, "i_pass" := stuPwd, "i_captcha" := ("" :: String)]
