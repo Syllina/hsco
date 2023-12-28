@@ -8,8 +8,8 @@ module Hsco.Thu.Internal (
     URLType(..),
     getThuURL, vpnPrefix,
     webVPNURL, idLoginURL, info2021URL,
-    
-    getLoginPostData, postThuLogin, redirectThuLogin,
+
+    ThuException(..),
 
     module Control.Monad.Logger,
     module Network.Wreq,
@@ -26,7 +26,6 @@ import Control.Lens
 import qualified Data.ByteString.Lazy as BS
 
 import Control.Monad.Logger
-import Control.Monad.Catch (handle, throwM)
 -- 如果外层代码执行在 Logger 下，内层代码加入了 ReaderT 的功能
 -- 二者是否可以共用一个 Logger
 -- 如果可以的话，这个 Logger 是否需要在外部定义成一个新的 Monad
@@ -83,22 +82,24 @@ info2021URL :: URLType -> String
 info2021URL URLRaw = getThuURL "info2021"
 info2021URL URLVPN = vpnPrefix <> "/77726476706e69737468656265737421f9f9479375603a01301c9aa596522b208e9cd9c9e383ff3f"
 
-getLoginPostData :: ThuEnv -> [FormParam]
-getLoginPostData ThuEnv {..} = ["i_user" := stuID, "i_pass" := stuPwd, "i_captcha" := ("" :: String)]
-
-postThuLogin :: ThuM (Response BS.ByteString)
-postThuLogin = asks getLoginPostData >>=
-                    postThu idLoginURL "/do/off/ui/auth/login/check"
-
+-- getLoginPostData :: ThuEnv -> [FormParam]
+-- getLoginPostData ThuEnv {..} = ["i_user" := stuID, "i_pass" := stuPwd, "i_captcha" := ("" :: String)]
+-- 
+-- postThuLogin :: ThuM (Response BS.ByteString)
+-- postThuLogin = asks getLoginPostData >>=
+--                     postThu idLoginURL "/do/off/ui/auth/login/check"
+-- 
 data ThuException = ThuException deriving (Show, Exception)
-
-redirectThuLogin :: ThuM (Response BS.ByteString)
-redirectThuLogin = handle handler action where
-    action = do
-        r <- postThuLogin
-        let Just url = fmap decodeUtf8 $ scrapeStringLike (r ^. responseBody) (attr "href" "a")
-        getThuDirect url
-    handler :: SomeException -> ThuM (Response BS.ByteString)
-    handler _ = do
-        liftIO $ putStrLn "OAuth：登录失败"
-        throwM $ ThuException
+-- 
+-- data ThuLoginException = WrongPassword
+-- 
+-- redirectThuLogin :: ThuM (Response BS.ByteString)
+-- redirectThuLogin = handle handler action where
+--     action = do
+--         r <- postThuLogin
+--         let Just url = fmap decodeUtf8 $ scrapeStringLike (r ^. responseBody) (attr "href" "a")
+--         getThuDirect url
+--     handler :: SomeException -> ThuM (Response BS.ByteString)
+--     handler _ = do
+--         liftIO $ putStrLn "OAuth：登录失败"
+--         throwM $ ThuException

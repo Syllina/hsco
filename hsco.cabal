@@ -32,6 +32,8 @@ common common-options
                      , encoding
                      , exceptions
                      , parsec
+                     , text
+                     , mtl
   
   mixins:              base hiding (Prelude)
                      , relude (Relude as Prelude)
@@ -60,6 +62,7 @@ library
                      , Hsco.Thu.Internal
                      , Hsco.Thu.WebVPN
                      , Hsco.Thu.Info
+                     , Hsco.Thu.OAuth
 executable hsco
   import:              common-options
   hs-source-dirs:      app
