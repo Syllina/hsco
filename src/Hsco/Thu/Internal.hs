@@ -86,24 +86,4 @@ learnURL :: URLType -> String
 learnURL URLRaw = getThuURL "learn"
 learnURL URLVPN = vpnPrefix <> "/77726476706e69737468656265737421fcf2408e297e7c4377068ea48d546d30ca8cc97bcc"
 
--- getLoginPostData :: ThuEnv -> [FormParam]
--- getLoginPostData ThuEnv {..} = ["i_user" := stuID, "i_pass" := stuPwd, "i_captcha" := ("" :: String)]
--- 
--- postThuLogin :: ThuM (Response BS.ByteString)
--- postThuLogin = asks getLoginPostData >>=
---                     postThu idLoginURL "/do/off/ui/auth/login/check"
--- 
 data ThuException = ThuException deriving (Show, Exception)
--- 
--- data ThuLoginException = WrongPassword
--- 
--- redirectThuLogin :: ThuM (Response BS.ByteString)
--- redirectThuLogin = handle handler action where
---     action = do
---         r <- postThuLogin
---         let Just url = fmap decodeUtf8 $ scrapeStringLike (r ^. responseBody) (attr "href" "a")
---         getThuDirect url
---     handler :: SomeException -> ThuM (Response BS.ByteString)
---     handler _ = do
---         liftIO $ putStrLn "OAuth：登录失败"
---         throwM $ ThuException
