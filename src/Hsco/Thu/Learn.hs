@@ -10,22 +10,15 @@ import Network.Wreq.Types (Postable)
 import Data.Aeson
 import Data.Aeson.Lens
 
-import Data.Text (breakOn, strip)
+import Data.Text (breakOn)
 import TextShow as T
 import qualified Data.Text as T
-import qualified Data.Text.IO as T
+-- import qualified Data.Text.IO as T
 import qualified Data.ByteString.Lazy as BS
 
 import Text.Parsec as P
 
-getLoginPostData :: ThuEnv -> [FormParam]
-getLoginPostData ThuEnv {..} = ["i_user" := stuID, "i_pass" := stuPwd, "atOnce" := ("true" :: String)]
-
-getLearn :: String -> ThuM (Response BS.ByteString)
-getLearn = getThu learnURL
-
-postLearn :: (Postable a) => String -> a -> ThuM (Response BS.ByteString)
-postLearn = postThu learnURL
+import Control.Monad.Catch (throwM)
 
 login :: ThuM (Response BS.ByteString)
 login = do
@@ -35,13 +28,49 @@ login = do
     let url = T.drop (T.length "window.location=\"") $
             fst . breakOn "\";" $ snd . breakOn "window.location=\"" $
             decodeUtf8 (r^.responseBody)
-    getLearn (T.unpack url)
+    getThu learnURL (T.unpack url)
+
+-- getCSRF
+-- 每次请求前最好都检查一遍 csrf，或许可以写成 monad 然后 withWebLearning 形式？
+-- 或者（怎么优美地保证）在每个导出的函数前都加入 checkLogin
+checkLogin :: ThuM String
+checkLogin = do
+    -- TODO 这里未判断是否已经登录，因为似乎直接选择重新发送登录请求也会得到一样的 csrf
+    r <- login
+    let content = decodeUtf8 $ r^.responseBody
+    -- 从 body 中的 url 里获取 csrf
+    -- let csrf = decodeUtf8 $ r^.responseCookie "XSRF-TOKEN" . cookieValue
+    -- 原本打算写成这样的形式，但似乎无效
+    let csrfParser = string "_csrf=" *> P.many validChar
+        validChar = hexDigit P.<|> char '-'
+        parseResult' = parse csrfParser "" (snd $ breakOn "_csrf=" content)
+    either handler pure parseResult'
+    -- parse 失败则抛出默认异常
+    where handler _ = logErrorN "Web Learning: csrf parse error" >> throwM ThuException
+
+-- with csrf
+type ThuLearnM = ReaderT String ThuM
+
+-- 这里我进行一个所有的 get 都只需要传 csrf 一个参数的大胆假设
+-- （否则就需要在 Internal 里导出一个 getThuWith）
+askCSRF :: ThuLearnM String
+askCSRF = ask
+
+getLearn :: String -> ThuLearnM (Response BS.ByteString)
+getLearn url = do
+    csrfSuffix <- ("_csrf="<>) <$> askCSRF
+    lift $ getThu learnURL (url <> "?" <> csrfSuffix)
+
+postLearn :: (Postable a) => String -> a -> ThuLearnM (Response BS.ByteString)
+postLearn url form = do
+    csrfSuffix <- ("_csrf="<>) <$> askCSRF
+    lift $ postThu learnURL (url <> "?" <> csrfSuffix) form
 
 data CourseMetaInfo = CourseMetaInfo {
-    name :: Text,
+    courseName :: Text,
     courseID :: String,
     urlID :: String
-} deriving (Show)
+} deriving stock (Show)
 
 instance FromJSON CourseMetaInfo where
 -- 如何不按顺序写
@@ -52,11 +81,11 @@ instance FromJSON CourseMetaInfo where
 
 instance TextShow CourseMetaInfo where
     showb CourseMetaInfo {..} =
-        "课程名: " <> fromText name <> ", 课程号: " <> T.fromString courseID
+        "课程名: " <> fromText courseName <> ", 课程号: " <> T.fromString courseID
 
 data HwMetaInfo = HwMetaInfo {
-    title :: Text
-} deriving (Show)
+    hwTitle :: Text
+} deriving stock (Show)
 
 instance FromJSON HwMetaInfo where
     parseJSON = withObject "HwMetaInfo" $ \v -> HwMetaInfo
@@ -64,24 +93,63 @@ instance FromJSON HwMetaInfo where
 
 instance TextShow HwMetaInfo where
     showb HwMetaInfo {..} =
-        "作业名: " <> fromText title
+        "作业名: " <> fromText hwTitle
+
+data SemesterMetaInfo = SemesterMetaInfo {
+    semID :: String,
+    semName :: Text
+} deriving stock (Show)
+
+instance FromJSON SemesterMetaInfo where
+    parseJSON = withObject "SemesterMetaInfo" $ \v -> SemesterMetaInfo
+        <$> v .: "xnxq" -- 学年学期？
+        <*> v .: "xnxqmc" -- 学年学期名称?
+
+instance TextShow SemesterMetaInfo where
+    showb SemesterMetaInfo {..} =
+        "学期名: " <> fromText semName
+
+parseResult :: Result a -> ThuLearnM a
+parseResult (Data.Aeson.Error st) = do
+    logErrorN ("WebLearning: JSON parse error: " <> Prelude.fromString st)
+    throwM ThuException
+parseResult (Data.Aeson.Success res) = pure res
+
+parseMaybe :: Maybe a -> ThuLearnM a
+parseMaybe Nothing = logErrorN "WebLearning: Nothing" >> throwM ThuException
+parseMaybe (Just a) = pure a
+
+-- TODO 真的需要每次拉学期吗？
+-- TODO parse 失败自己报异常的 parser
+getCurrentSemester :: ThuLearnM SemesterMetaInfo
+getCurrentSemester = do
+    r <- getLearn "/b/kc/zhjw_v_code_xnxq/getCurrentAndNextSemester"
+    -- result 是当前学期，resultList 只有一个元素，是后一个学期
+    semCurrent <- parseMaybe $ r^?responseBody . key "result"
+    semester <- parseResult $ (fromJSON semCurrent :: Result SemesterMetaInfo)
+    logInfoN $ "WebLearning: 获取到当前学期 " <> (semName semester)
+    pure semester
+
+getCourses :: SemesterMetaInfo -> ThuLearnM [CourseMetaInfo]
+getCourses SemesterMetaInfo {..} = do
+    r <- getLearn $ "/b/wlxt/kc/v_wlkc_xs_xkb_kcb_extend/student/loadCourseBySemesterId/" <> semID <> "/zh"
+    coursesList <- parseMaybe $ r^?responseBody . key "resultList"
+    parseResult $ (fromJSON coursesList :: Result [CourseMetaInfo])
+
+getHws :: CourseMetaInfo -> ThuLearnM [HwMetaInfo]
+getHws course = do
+    r <- postLearn "/b/wlxt/kczy/zy/student/zyListWj" ["aoData" := ("[{\"name\":\"wlkcid\",\"value\":\"" <> urlID course <> "\"}]" :: String)]
+    hwsList <- parseMaybe $ r^?responseBody . key "object" . key "aaData"
+    parseResult $ (fromJSON hwsList :: Result [HwMetaInfo])
 
 -- 有一个神秘的 `zjh'，似乎与学生对应
 learnHello :: ThuM ()
 learnHello = do
-    r <- login
-    let content = decodeUtf8 $ r^.responseBody
-    let csrfParser = string "_csrf=" *> P.many validChar
-        validChar = hexDigit P.<|> char '-'
-        Right csrf = parse csrfParser "" (snd $ breakOn "_csrf=" content)
-    -- let csrf = decodeUtf8 $ r^.responseCookie "XSRF-TOKEN" . cookieValue
-    r <- getLearn $ "/b/wlxt/kc/v_wlkc_xs_xkb_kcb_extend/student/loadCourseBySemesterId/2023-2024-1/zh?_csrf=" <> csrf
-    let Just coursesList = r^?responseBody . key "resultList"
-        Success courses = fromJSON coursesList :: Result [CourseMetaInfo]
-    -- r <- getLearn $ "/f/wlxt/index/course/student/course?wlkcid=" <> urlID course
-    let proc = \course -> do
-            r <- postLearn ("/b/wlxt/kczy/zy/student/zyListWj?_csrf=" <> csrf <> "&_csrf=" <> csrf) ["aoData" := ("[{\"name\":\"wlkcid\",\"value\":\"" <> urlID course <> "\"}]" :: String)]
-            let Just hwList = r^?responseBody . key "object" . key "aaData"
-                Success hws = fromJSON hwList :: Result [HwMetaInfo]
-            liftIO $ printT hws
-    mapM_ proc courses
+    csrf <- checkLogin
+    -- usingReaderT = flip runReaderT -- from relude
+    usingReaderT csrf $ do
+        semester <- getCurrentSemester
+        courses <- getCourses semester
+        -- r <- getLearn $ "/f/wlxt/index/course/student/course?wlkcid=" <> urlID course
+        forM_ courses $ \course -> getHws course >>= (liftIO . printT)
+        pure ()
