@@ -34,6 +34,9 @@ common common-options
                      , parsec
                      , text
                      , mtl
+                     , aeson
+                     , lens-aeson
+                     , text-show
   
   mixins:              base hiding (Prelude)
                      , relude (Relude as Prelude)
