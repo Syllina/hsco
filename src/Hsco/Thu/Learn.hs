@@ -28,12 +28,12 @@ login = do
     let url = T.drop (T.length "window.location=\"") $
             fst . breakOn "\";" $ snd . breakOn "window.location=\"" $
             decodeUtf8 (r^.responseBody)
-    getThu learnURL (T.unpack url)
+    getThu learnURL url
 
 -- getCSRF
 -- 每次请求前最好都检查一遍 csrf，或许可以写成 monad 然后 withWebLearning 形式？
 -- 或者（怎么优美地保证）在每个导出的函数前都加入 checkLogin
-checkLogin :: ThuM String
+checkLogin :: ThuM Text
 checkLogin = do
     -- TODO 这里未判断是否已经登录，因为似乎直接选择重新发送登录请求也会得到一样的 csrf
     r <- login
@@ -43,33 +43,33 @@ checkLogin = do
     -- 原本打算写成这样的形式，但似乎无效
     let csrfParser = string "_csrf=" *> P.many validChar
         validChar = hexDigit P.<|> char '-'
-        parseResult' = parse csrfParser "" (snd $ breakOn "_csrf=" content)
+        parseResult' = T.pack <$> parse csrfParser "" (snd $ breakOn "_csrf=" content)
     either handler pure parseResult'
     -- parse 失败则抛出默认异常
     where handler _ = logErrorN "Web Learning: csrf parse error" >> throwM ThuException
 
 -- with csrf
-type ThuLearnM = ReaderT String ThuM
+type ThuLearnM = ReaderT Text ThuM
 
 -- 这里我进行一个所有的 get 都只需要传 csrf 一个参数的大胆假设
 -- （否则就需要在 Internal 里导出一个 getThuWith）
-askCSRF :: ThuLearnM String
+askCSRF :: ThuLearnM Text
 askCSRF = ask
 
-getLearn :: String -> ThuLearnM (Response BS.ByteString)
+getLearn :: Text -> ThuLearnM (Response BS.ByteString)
 getLearn url = do
     csrfSuffix <- ("_csrf="<>) <$> askCSRF
     lift $ getThu learnURL (url <> "?" <> csrfSuffix)
 
-postLearn :: (Postable a) => String -> a -> ThuLearnM (Response BS.ByteString)
+postLearn :: (Postable a) => Text -> a -> ThuLearnM (Response BS.ByteString)
 postLearn url form = do
     csrfSuffix <- ("_csrf="<>) <$> askCSRF
     lift $ postThu learnURL (url <> "?" <> csrfSuffix) form
 
 data CourseMetaInfo = CourseMetaInfo {
     courseName :: Text,
-    courseID :: String,
-    urlID :: String
+    courseID :: Text,
+    urlID :: Text
 } deriving stock (Show)
 
 instance FromJSON CourseMetaInfo where
@@ -81,7 +81,7 @@ instance FromJSON CourseMetaInfo where
 
 instance TextShow CourseMetaInfo where
     showb CourseMetaInfo {..} =
-        "课程名: " <> fromText courseName <> ", 课程号: " <> T.fromString courseID
+        "课程名: " <> fromText courseName <> ", 课程号: " <> fromText courseID
 
 data HwMetaInfo = HwMetaInfo {
     hwTitle :: Text
@@ -96,7 +96,7 @@ instance TextShow HwMetaInfo where
         "作业名: " <> fromText hwTitle
 
 data SemesterMetaInfo = SemesterMetaInfo {
-    semID :: String,
+    semID :: Text,
     semName :: Text
 } deriving stock (Show)
 
@@ -138,7 +138,7 @@ getCourses SemesterMetaInfo {..} = do
 
 getHws :: CourseMetaInfo -> ThuLearnM [HwMetaInfo]
 getHws course = do
-    r <- postLearn "/b/wlxt/kczy/zy/student/zyListWj" ["aoData" := ("[{\"name\":\"wlkcid\",\"value\":\"" <> urlID course <> "\"}]" :: String)]
+    r <- postLearn "/b/wlxt/kczy/zy/student/zyListWj" ["aoData" := ("[{\"name\":\"wlkcid\",\"value\":\"" <> urlID course <> "\"}]" :: Text)]
     hwsList <- parseMaybe $ r^?responseBody . key "object" . key "aaData"
     parseResult $ (fromJSON hwsList :: Result [HwMetaInfo])
 

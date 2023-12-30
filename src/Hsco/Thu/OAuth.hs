@@ -15,7 +15,7 @@ import Control.Monad.Catch (throwM)
 
 data ThuOAuthException = WrongPassword | UnknownError
     deriving (Show, Exception, Eq)
-parseLoginResponse :: Response BS.ByteString -> Either ThuOAuthException String
+parseLoginResponse :: Response BS.ByteString -> Either ThuOAuthException Text
 parseLoginResponse r = runExcept $ do
     let contentType = r^.responseHeader "content-type"
     when (contentType /= "text/html;charset=UTF-8") $ throwError UnknownError
@@ -24,9 +24,9 @@ parseLoginResponse r = runExcept $ do
     when (errorMsg == Just "您的用户名或密码不正确，请重试！") $
         throwError WrongPassword
     let urlRes = scrapeStringLike content (attr "href" "a")
-    maybe (throwError UnknownError) (return . unpack) urlRes
+    maybe (throwError UnknownError) pure urlRes
 
-redirectThuLogin :: String -> (ThuEnv -> [FormParam]) -> ThuM (Response BS.ByteString)
+redirectThuLogin :: Text -> (ThuEnv -> [FormParam]) -> ThuM (Response BS.ByteString)
 redirectThuLogin url method = action where
     action = asks method >>=
              postThu idLoginURL ("/do/off/ui/auth/login" <> url) >>=
@@ -41,14 +41,14 @@ redirectThuLoginCheck = redirectThuLogin "/check" getData where
     getData ThuEnv {..} = [
             "i_user" := stuID,
             "i_pass" := stuPwd,
-            "i_captcha" := ("" :: String)
+            "i_captcha" := ("" :: Text)
         ]
 
-redirectThuLoginOnce :: String -> ThuM (Response BS.ByteString)
+redirectThuLoginOnce :: Text -> ThuM (Response BS.ByteString)
 redirectThuLoginOnce url = redirectThuLogin url getData where
     getData :: ThuEnv -> [FormParam]
     getData ThuEnv {..} = [
             "i_user" := stuID,
             "i_pass" := stuPwd,
-            "atOnce" := ("true" :: String)
+            "atOnce" := ("true" :: Text)
         ]

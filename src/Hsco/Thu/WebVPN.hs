@@ -10,7 +10,7 @@ import qualified Network.Wreq.Session as S
 
 import Control.Exception
 
-withWebVPN :: IO (String, String) -> ThuM () -> IO ()
+withWebVPN :: IO (Text, Text) -> ThuM () -> IO ()
 -- 这里无法改成 ThuM a -> IO a，不知道如何修改
 withWebVPN getInput action = loop where
     loop = do
