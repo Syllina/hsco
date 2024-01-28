@@ -22,6 +22,7 @@ source-repository head
 common common-options
   build-depends:       base ^>= 4.17.0.0
                      , relude
+                     , text
   
   mixins:              base hiding (Prelude)
                      , relude (Relude as Prelude)
@@ -50,6 +51,8 @@ library
   exposed-modules:     Hsco
   other-modules:       Hsco.Reco
                        Hsco.Reco.Arcanist
+                       Hsco.Reco.ArcanistList
+                       Hsco.Reco.Arcanist.ThirtySeven
 executable hsco
   import:              common-options
   hs-source-dirs:      app

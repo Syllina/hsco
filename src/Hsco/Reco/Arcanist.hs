@@ -1,50 +1,80 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, DataKinds, KindSignatures, GADTs, TypeApplications, ScopedTypeVariables, AllowAmbiguousTypes, QuantifiedConstraints #-}
 module Hsco.Reco.Arcanist (
-    AttributeGenerator,
+    StatGenerator,
     fromRaw,
-    genAttrMaybe,
-    Insight,
-    Level
+    genStatMaybe,
+    Insight(..),
+    Level(..),
+    ArcanistPlainData(..),
+    IsArcanist(..),
+    Arcanist(..),
+    SomeArcanist(..),
+    ArcanistInst(..)
 ) where
+
+import qualified Data.Text.IO as T
+
+-- data ArcanistName = ThirtySeven | ToothFairy
+
+data ArcanistPlainData = ArcanistPlainData {
+    atk, hp, rdef, mdef, crit :: StatGenerator
+}
+
+class IsArcanist arc where
+    arcName :: Text
+    arcPlainStat :: ArcanistPlainData
+
+class ArcanistInst arc where
+    getName :: arc -> Text
+
+data (IsArcanist arc) => Arcanist arc = Arcanist
+
+instance forall arc. IsArcanist arc => ArcanistInst (Arcanist arc) where
+    getName _ = arcName @arc
+
+data SomeArcanist where
+    SomeArcanist :: (IsArcanist a) => Arcanist a -> SomeArcanist
+instance ArcanistInst SomeArcanist where
+    getName (SomeArcanist arc) = getName arc
 
 -- this could be a kind!
 newtype Insight = Insight Int deriving (Eq, Num)
 newtype Level = Level Int
 
 linearInterpolate :: (Int, Int) -> (Int, Int) -> Int -> Double
-linearInterpolate (x1', y1') (x2', y2') = \x -> (y2 - y1) / (x2 - x1) * (fromIntegral x - x1) + y2 where
+linearInterpolate (x1', y1') (x2', y2') = \x -> (y2 - y1) / (x2 - x1) * (fromIntegral x - x1) + y1 where
     x1 = fromIntegral x1'
     y1 = fromIntegral y1'
     x2 = fromIntegral x2'
     y2 = fromIntegral y2'
 
-data AttributeGenerator = AttributeGenerator {
+data StatGenerator = StatGenerator {
     insight :: Int, -- Insight Bonus
-    attr01 :: Int, -- attribute at insight 0 level 1
-    attr030 :: Int,
-    attr140 :: Int,
-    attr250 :: Int,
-    attr360 :: Int
+    stat01 :: Int, -- statibute at insight 0 level 1
+    stat030 :: Int,
+    stat140 :: Int,
+    stat250 :: Int,
+    stat360 :: Int
 }
 
-fromRaw :: (Int, Int, Int, Int, Int, Int) -> AttributeGenerator
-fromRaw (insight, attr01, attr030, attr140, attr250, attr360) = AttributeGenerator {..}
+fromRaw :: (Int, Int, Int, Int, Int, Int) -> StatGenerator
+fromRaw (insight, stat01, stat030, stat140, stat250, stat360) = StatGenerator {..}
 
-genAttrMaybe :: (Insight, Level) -> AttributeGenerator -> Maybe Int
-genAttrMaybe (0, Level lvl) (AttributeGenerator {..})
-    | 1 <= lvl && lvl <= 30 = Just $ floor $ linearInterpolate (1, attr01) (30, attr030) lvl
+genStatMaybe :: (Insight, Level) -> StatGenerator -> Maybe Int
+genStatMaybe (0, Level lvl) (StatGenerator {..})
+    | 1 <= lvl && lvl <= 30 = Just $ floor $ linearInterpolate (1, stat01) (30, stat030) lvl
     | otherwise = Nothing
 
-genAttrMaybe (1, Level lvl) (AttributeGenerator {..})
-    | 1 <= lvl && lvl <= 40 = Just $ floor $ linearInterpolate (0, attr030 + insight) (40, attr140) lvl
+genStatMaybe (1, Level lvl) (StatGenerator {..})
+    | 1 <= lvl && lvl <= 40 = Just $ floor $ linearInterpolate (0, stat030 + insight) (40, stat140) lvl
     | otherwise = Nothing
 
-genAttrMaybe (2, Level lvl) (AttributeGenerator {..})
-    | 1 <= lvl && lvl <= 50 = Just $ floor $ linearInterpolate (0, attr140 + insight) (50, attr250) lvl
+genStatMaybe (2, Level lvl) (StatGenerator {..})
+    | 1 <= lvl && lvl <= 50 = Just $ floor $ linearInterpolate (0, stat140 + insight) (50, stat250) lvl
     | otherwise = Nothing
 
-genAttrMaybe (3, Level lvl) (AttributeGenerator {..})
-    | 1 <= lvl && lvl <= 60 = Just $ floor $ linearInterpolate (0, attr250 + insight) (60, attr360) lvl
+genStatMaybe (3, Level lvl) (StatGenerator {..})
+    | 1 <= lvl && lvl <= 60 = Just $ floor $ linearInterpolate (0, stat250 + insight) (60, stat360) lvl
     | otherwise = Nothing
 
-genAttrMaybe _ _ = Nothing
+genStatMaybe _ _ = Nothing
