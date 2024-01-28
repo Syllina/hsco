@@ -12,10 +12,6 @@ module Hsco.Reco.Arcanist (
     ArcanistInst(..)
 ) where
 
-import qualified Data.Text.IO as T
-
--- data ArcanistName = ThirtySeven | ToothFairy
-
 data ArcanistPlainData = ArcanistPlainData {
     atk, hp, rdef, mdef, crit :: StatGenerator
 }
@@ -38,7 +34,7 @@ instance ArcanistInst SomeArcanist where
     getName (SomeArcanist arc) = getName arc
 
 -- this could be a kind!
-newtype Insight = Insight Int deriving (Eq, Num)
+newtype Insight = Insight Int deriving newtype (Eq, Num)
 newtype Level = Level Int
 
 linearInterpolate :: (Int, Int) -> (Int, Int) -> Int -> Double
@@ -49,7 +45,7 @@ linearInterpolate (x1', y1') (x2', y2') = \x -> (y2 - y1) / (x2 - x1) * (fromInt
     y2 = fromIntegral y2'
 
 data StatGenerator = StatGenerator {
-    insight :: Int, -- Insight Bonus
+    insight :: Int, -- insight bonus
     stat01 :: Int, -- statibute at insight 0 level 1
     stat030 :: Int,
     stat140 :: Int,
