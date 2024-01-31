@@ -1,4 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, DataKinds, KindSignatures, GADTs, TypeApplications, ScopedTypeVariables, AllowAmbiguousTypes, QuantifiedConstraints #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, DataKinds, KindSignatures, GADTs, TypeApplications, ScopedTypeVariables, AllowAmbiguousTypes, QuantifiedConstraints, TypeFamilies #-}
 module Hsco.Reco.Arcanist (
     StatGenerator,
     fromRaw,
@@ -12,13 +12,29 @@ module Hsco.Reco.Arcanist (
     ArcanistInst(..)
 ) where
 
+import Hsco.Reco.Resonance
+
 data ArcanistPlainData = ArcanistPlainData {
-    atk, hp, rdef, mdef, crit :: StatGenerator
+    atkGen, hpGen, rdefGen, mdefGen, critGen :: StatGenerator
 }
+class HasStat st where
+    atk :: st -> Int
+    hp :: st -> Int
+    realDef :: st -> Int
+    mentDef :: st -> Int
+    critRate :: st -> Double
+    critRes :: st -> Double
+    critDmg :: st -> Double
+    critDef :: st -> Double
+    dmgBonus :: st -> Double
+    dmgReduct :: st -> Double
+    incMight :: st -> Double
+    ritMight :: st -> Double
 
 class IsArcanist arc where
     arcName :: Text
     arcPlainStat :: ArcanistPlainData
+    type ArcResType arc :: ResonanceType
 
 class ArcanistInst arc where
     getName :: arc -> Text
