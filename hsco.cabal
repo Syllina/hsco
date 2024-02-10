@@ -34,6 +34,7 @@ library
       Hsco.Reco.Arcanist.ThirtySeven
       Hsco.Reco.ArcanistList
       Hsco.Reco.Resonance
+      Hsco.Reco.Stat
       Paths_hsco
   autogen-modules:
       Paths_hsco

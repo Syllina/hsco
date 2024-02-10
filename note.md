@@ -203,12 +203,13 @@ data SomeArcanist where
 
 其中提到了 [HList-ext.pdf](https://okmij.org/ftp/Haskell/HList-ext.pdf)
 
-暂时感觉这个解法没有直接使用 existential types
+暂时感觉这个解法没有直接使用 existential types 方便？
 
 ---
 
 如何描述共鸣？
 
+主模块类型决定：
 神秘学家类型到对应的共鸣主模块（作为被 `DataKinds` promote 的 type）的映射可以表示为一个 associated type family
 ```haskell
 class IsArcanist arc where
@@ -221,3 +222,31 @@ data ResonanceType = X | T | Z | U
 class IsArcanist arc where
     type ArcResType arc :: ResonanceType
 ```
+
+主模块 + 等级决定的模块类型、数量、大小和格子大小
+
+主模块放在类型中，等级和摆放类型作为变量. 这样的话在创建共鸣时必须给定一个摆放方案（其实也是合理的，默认是空）
+
+如何表示摆放方案？能摆放的模块与共鸣等级 / 主模块类型有关. 暂时先用一个 list 代替？或者可以只给定 list，check 能否满足条件？（这是一个静态问题，可以预先计算）
+
+如何表示属性？检查可行性时只需要考虑类型和数量即可，属性可在最后计算.
+
+描述共鸣就不使用 type system 检验可行性了（也不知道应该怎么做），使用运行时检查.
+
+计算共鸣属性时需要知道角色类型和等级（满级属性决定主模块加成，基础面板决定百分比加值的实际效果），计算得到的属性如何表示？现在只能把一个类型声明为 HasStat，如何表示心相和 buff 等的百分比属性加成？
+
+尝试设计 HasStatBuff 的 typeclass，或者设计成数据类型更好？
+
+将 Stat 和 StatMod 改成了数据类型，对于四个本身为 Int 的属性，有具体数字的加值（心相、共鸣主模块）和百分比加值两种，在同时有这两种时先应用百分比（然后取整），再应用具体数字加值.
+
+---
+
+？：在荒唐决斗事件中，掠夺敌方的所有财产
+
+？：在吵闹的井事件中，完全拒绝钓金雀子儿的念头
+隐光虫标本
+隐光虫茧：在（2-4）救赎事件前，拥有 180 入迷值
+
+？：在守林人事件中，选择信任神秘的老人
+？：在美味汽水事件中，和队员一起分享汽水
+？：在湖泊之声事件中连续聆听 3 次

@@ -18,4 +18,4 @@ instance IsArcanist ThirtySeven where
         critGen = fromRaw (41, 313, 313, 354, 395, 436)
     }
 
-    type ArcResType ThirtySeven = X
+    type ArcResType ThirtySeven = TypeX

@@ -17,19 +17,6 @@ import Hsco.Reco.Resonance
 data ArcanistPlainData = ArcanistPlainData {
     atkGen, hpGen, rdefGen, mdefGen, critGen :: StatGenerator
 }
-class HasStat st where
-    atk :: st -> Int
-    hp :: st -> Int
-    realDef :: st -> Int
-    mentDef :: st -> Int
-    critRate :: st -> Double
-    critRes :: st -> Double
-    critDmg :: st -> Double
-    critDef :: st -> Double
-    dmgBonus :: st -> Double
-    dmgReduct :: st -> Double
-    incMight :: st -> Double
-    ritMight :: st -> Double
 
 class IsArcanist arc where
     arcName :: Text
