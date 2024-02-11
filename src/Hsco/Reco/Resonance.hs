@@ -1,10 +1,15 @@
 {-# LANGUAGE DataKinds, KindSignatures, TypeApplications, ScopedTypeVariables, AllowAmbiguousTypes, InstanceSigs #-}
 module Hsco.Reco.Resonance (
     ResonanceType(..),
-    Resonance(..)
+    Resonance(..),
+    getStatMod,
+    IsResonanceType,
+    ResonanceBlockType(..)
 ) where
 
 import Hsco.Reco.Stat
+import qualified Data.Map.Strict as Map
+import Data.List (lookup)
 
 -- 共鸣块属性统计
 -- 参考自灰机 wiki 及 nga  https://bbs.nga.cn/read.php?tid=37109986
@@ -105,10 +110,7 @@ import Hsco.Reco.Stat
 
 data ResonanceType = TypeX | TypeT | TypeZ | TypeU -- X as 十
 
-class IsResonanceType (t :: ResonanceType) where
-    getConstraints :: ()
-
-data ResonanceBlockType = SingleDB | SingleDR | Double | Triple | I | T | O | S | L | Z | J | BigX | BigT | BigZ | BigU deriving (Eq)
+data ResonanceBlockType = SingleDB | SingleDR | Double | Triple | I | T | O | S | L | Z | J | BigX | BigT | BigZ | BigU deriving (Eq, Ord)
 
 data ResonanceBlock = ResonanceBlock {
     rbType :: ResonanceBlockType,
@@ -219,6 +221,74 @@ getMainBlockMod (ResonanceBlock {..}) (Stat {..}) = mod1 <> mod2 <> mod3 where
 
 data Resonance (r :: ResonanceType) = Resonance {
     resLevel :: Int,
-    resActive :: [ResonanceBlockType]
+    resActive :: [(ResonanceBlockType, Int)]
     -- 以及共鸣的摆放信息
 }
+
+class IsResonanceType (r :: ResonanceType) where
+    getResBlockOrder :: (ResonanceBlockType, ResonanceBlockType, ResonanceBlockType, ResonanceBlockType, ResonanceBlockType)
+
+    getLevelSize :: Int -> (Int, Int)
+    getLevelSize = undefined
+
+    -- (Int, Int) ==> (count, level)
+    getLevelInfo :: Int -> Maybe (Map.Map ResonanceBlockType (Int, Int))
+    getLevelInfo n | n < 1 || n > 15 = Nothing
+    getLevelInfo n = Just $ loop n where
+        loop 0 = Map.empty
+        -- if dup, takes the latter one
+        loop n = Map.unionWith (flip const) (loop (n-1)) (fromList $ curLevel n)
+
+        (big, rb1, rb2, rb3, rb4) = getResBlockOrder @r
+        curLevel 1 = [(big, (1, 1)), (SingleDB, (1, 1)), (SingleDR, (1, 1)), (Double, (1, 1))]
+        curLevel 2 = [(big, (1, 2)), (SingleDB, (2, 1)), (Triple, (1, 1)), (rb1, (1, 1)), (rb2, (1, 1))]
+        curLevel 3 = [(SingleDR, (2, 1)), (I, (1, 1)), (T, (1, 1)), (O, (1, 1))]
+        curLevel 4 = [(big, (1, 3)), (Triple, (2, 1)), (rb1, (2, 1)), (rb3, (1, 1))]
+        curLevel 5 = [(I, (1, 2)), (T, (1, 2)), (O, (1, 2)), (rb4, (1, 1))]
+        curLevel 6 = [(big, (1, 4)), (rb1, (2, 2)), (rb2, (1, 2))]
+        curLevel 7 = [(Double, (2, 1)), (rb2, (2, 2)), (rb3, (1, 2)), (rb4, (1, 2))]
+        curLevel 8 = [(big, (1, 5)), (Triple, (2, 2)), (I, (1, 3)), (T, (1, 3)), (O, (1, 3)), (rb1, (3, 2))]
+        curLevel 9 = [(Triple, (3, 2)), (I, (2, 3)), (T, (2, 3)), (O, (2, 3)), (rb1, (3, 3))]
+        curLevel 10 = [(big, (1, 6)), (Triple, (3, 3)), (rb2, (2, 3)), (rb3, (1, 3)), (rb4, (1, 3))]
+        curLevel 11 = [(big, (1, 7)), (Triple, (4, 3)), (rb1, (4, 4)), (rb2, (2, 4))]
+        curLevel 12 = [(Double, (3, 2)), (I, (2, 4)), (T, (2, 4)), (O, (2, 4))]
+        curLevel 13 = [(big, (1, 8)), (rb3, (1, 4)), (rb4, (1, 4))]
+        curLevel 14 = [(big, (1, 9))]
+        curLevel 15 = [(big, (1, 10))]
+
+    getResonanceBlocks :: Resonance r -> Maybe [(ResonanceBlock, Int)]
+    getResonanceBlocks (Resonance {..}) 
+        | resLevel < 1 || resLevel > 15 = Nothing
+        | Map.size rbMap == length resActive = result where
+            rbMap :: Map.Map ResonanceBlockType Int
+            rbMap = fromList resActive
+            getBlock :: (ResonanceBlockType, Int) -> ResonanceBlock
+            getBlock = undefined
+            result = do
+                levelInfo <- getLevelInfo @r resLevel
+                let levelInfo' = Map.intersection levelInfo rbMap
+                    diffMap = Map.differenceWith func levelInfo' rbMap
+                    func (cap, lvl) cnt
+                        | 0 <= cnt && cnt <= cap = Just (cnt, lvl)
+                        | otherwise = Nothing
+                guard (Map.size diffMap == Map.size rbMap)
+                pure $ toList $ Map.mapWithKey (\rbt (cnt, lvl) -> (ResonanceBlock { rbType = rbt, rbLevel = lvl }, cnt)) diffMap
+
+    getStatMod :: Resonance r -> Stat -> Maybe StatMod
+    getStatMod res stat = do
+        rbs <- getResonanceBlocks res
+        let statMods = do
+                (rb, cnt) <- rbs
+                let mod | isMainBlock rb = getMainBlockMod rb stat
+                        | otherwise = toStatMod rb
+                pure $ replicate cnt mod
+        pure $ mconcat $ mconcat statMods
+
+instance IsResonanceType TypeX where
+    getResBlockOrder = (BigX, J, L, Z, S)
+instance IsResonanceType TypeT where
+    getResBlockOrder = (BigT, S, L, Z, J)
+instance IsResonanceType TypeZ where
+    getResBlockOrder = (BigZ, L, S, Z, J)
+instance IsResonanceType TypeU where
+    getResBlockOrder = (BigU, Z, L, S, J)

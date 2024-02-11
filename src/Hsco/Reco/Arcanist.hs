@@ -1,4 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, DataKinds, KindSignatures, GADTs, TypeApplications, ScopedTypeVariables, AllowAmbiguousTypes, QuantifiedConstraints, TypeFamilies #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, DataKinds, KindSignatures, GADTs, TypeApplications, ScopedTypeVariables, AllowAmbiguousTypes, QuantifiedConstraints, TypeFamilies, FlexibleContexts, UndecidableInstances #-}
 module Hsco.Reco.Arcanist (
     StatGenerator,
     fromRaw,
@@ -9,10 +9,14 @@ module Hsco.Reco.Arcanist (
     IsArcanist(..),
     Arcanist(..),
     SomeArcanist(..),
-    ArcanistInst(..)
+    ArcanistInst(..),
+    module Hsco.Reco.Resonance,
+    module Hsco.Reco.Stat
 ) where
 
-import Hsco.Reco.Resonance
+import Hsco.Reco.Resonance hiding (getStatMod)
+import qualified Hsco.Reco.Resonance as Resonance
+import Hsco.Reco.Stat
 
 data ArcanistPlainData = ArcanistPlainData {
     atkGen, hpGen, rdefGen, mdefGen, critGen :: StatGenerator
@@ -25,20 +29,49 @@ class IsArcanist arc where
 
 class ArcanistInst arc where
     getName :: arc -> Text
-
-data (IsArcanist arc) => Arcanist arc = Arcanist
-
-instance forall arc. IsArcanist arc => ArcanistInst (Arcanist arc) where
-    getName _ = arcName @arc
-
-data SomeArcanist where
-    SomeArcanist :: (IsArcanist a) => Arcanist a -> SomeArcanist
-instance ArcanistInst SomeArcanist where
-    getName (SomeArcanist arc) = getName arc
+    getPlainStat :: arc -> Maybe Stat
+    -- 如果等级可以从类型上验证这里就不需要 Maybe 了
+    getResonanceStatMod :: arc -> Maybe StatMod
 
 -- this could be a kind!
 newtype Insight = Insight Int deriving newtype (Eq, Num)
 newtype Level = Level Int
+
+data (IsArcanist arc) => Arcanist arc = Arcanist {
+    arcInsight :: Insight,
+    arcLevel :: Level,
+    arcResonance :: Resonance (ArcResType arc)
+}
+
+instance forall arc. (IsArcanist arc, IsResonanceType (ArcResType arc)) => ArcanistInst (Arcanist arc) where
+    getName _ = arcName @arc
+    getPlainStat (Arcanist {..}) = do
+        let usingGen gen = genStatMaybe (arcInsight, arcLevel) (gen $ arcPlainStat @arc)
+        atk <- usingGen atkGen
+        hp <- usingGen hpGen
+        realDef <- usingGen rdefGen
+        mentDef <- usingGen mdefGen
+        critTech <- usingGen critGen
+        pure $ statDef {
+            atk = atk,
+            hp = hp,
+            realDef = realDef,
+            mentDef = mentDef,
+            critRate = fromIntegral critTech / 3000,
+            critDmg = 1.3 + fromIntegral critTech / 2000
+        }
+    getResonanceStatMod arc@(Arcanist {..}) = do
+        stat360 <- getPlainStat $ arc {
+            arcInsight = Insight 3,
+            arcLevel = Level 60
+        }
+        Resonance.getStatMod @(ArcResType arc) arcResonance stat360
+
+data SomeArcanist where
+    SomeArcanist :: (IsArcanist a, IsResonanceType (ArcResType a)) => Arcanist a -> SomeArcanist
+instance ArcanistInst SomeArcanist where
+    getName (SomeArcanist arc) = getName arc
+    getResonanceStatMod (SomeArcanist arc) = getResonanceStatMod arc
 
 linearInterpolate :: (Int, Int) -> (Int, Int) -> Int -> Double
 linearInterpolate (x1', y1') (x2', y2') = \x -> (y2 - y1) / (x2 - x1) * (fromIntegral x - x1) + y1 where

@@ -45,6 +45,7 @@ library
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wmissing-deriving-strategies -fhide-source-paths
   build-depends:
       base >=4.7 && <5
+    , containers
     , relude
     , text
   mixins:
@@ -65,6 +66,7 @@ executable hsco
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wmissing-deriving-strategies -fhide-source-paths -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , containers
     , hsco
     , relude
     , text
@@ -87,6 +89,7 @@ test-suite hsco-test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wmissing-deriving-strategies -fhide-source-paths -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , containers
     , hsco
     , relude
     , text
@@ -109,6 +112,7 @@ benchmark hsco-benchmark
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wmissing-deriving-strategies -fhide-source-paths -threaded -rtspots -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , containers
     , gauge
     , hsco
     , relude

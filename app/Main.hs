@@ -21,11 +21,23 @@ showCoef ls = "[" <> show l <> ", " <> show r <> "]" where
 
 main :: IO ()
 main = do
-    let Just x = genStatMaybe (Insight 3, Level 37) (fromRaw (36, 269, 408, 683, 1019, 1199))
-    print x
-    let arcList = [SomeArcanist (Arcanist :: Arcanist ThirtySeven)]
-    print $ map getName arcList
+    -- let Just x = genStatMaybe (Insight 3, Level 37) (fromRaw (36, 269, 408, 683, 1019, 1199))
+    -- print x
+    -- let arcList = [SomeArcanist (Arcanist :: Arcanist ThirtySeven)]
+    -- print $ map getName arcList
 
-    putStrLn $ showCoef [(1757, 7031)]
-    putStrLn $ showCoef [(212, 922)]
-    putStrLn $ showCoef [(128, 534), (145, 605), (118, 492), (134, 559), (138, 579)]
+    -- putStrLn $ showCoef [(1757, 7031)]
+    -- putStrLn $ showCoef [(212, 922)]
+    -- putStrLn $ showCoef [(128, 534), (145, 605), (118, 492), (134, 559), (138, 579)]
+
+    let arc = Arcanist {
+        arcInsight = Insight 3,
+        arcLevel = Level 37,
+        arcResonance = Resonance {
+            resLevel = 15,
+            resActive = [(Double, 2), (O, 2), (L, 2), (J, 3), (S, 1), (T, 2), (BigX, 1)]
+        }
+    } :: Arcanist ThirtySeven
+    let Just stat = getPlainStat arc
+        Just statMod = getResonanceStatMod arc
+    print $ applyMod stat statMod

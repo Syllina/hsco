@@ -20,7 +20,7 @@ data Stat = Stat {
     ritMight :: Double,
     healRate :: Double,
     peneRate :: Double
-}
+} deriving (Show)
 
 class HasStatMod stm where
     toStatMod :: stm -> StatMod
@@ -34,6 +34,26 @@ data StatMod = StatMod {
     incMightMod, ritMightMod :: Double,
     healRateMod :: Double,
     peneRateMod :: Double
+} deriving (Show)
+
+statDef :: Stat
+statDef = Stat {
+    atk = 0,
+    hp = 0,
+    realDef = 0,
+    mentDef = 0,
+    critRate = 0,
+    critRes = 0,
+    critDmg = 0,
+    critDef = 0,
+    dmgBonus = 0,
+    dmgReduct = 0,
+    dmgHeal = 0,
+    leechRate = 0,
+    incMight = 0,
+    ritMight = 0,
+    healRate = 0,
+    peneRate = 0
 }
 
 statModDef :: StatMod
