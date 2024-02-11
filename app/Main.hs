@@ -3,6 +3,11 @@ module Main (main) where
 -- import Hsco (fromRaw, genStatMaybe, Level(..), Insight(..), tmpAction)
 import Hsco
 
+-- 这段代码是用来计算共鸣主模块对应的属性加成的百分比的
+-- 游戏内给出的主模块属性是数字，数字实际为
+-- 对应角色洞三 60 数值乘上一个固定百分比的结果
+-- 传入不同角色同一等级的主模块同一属性的列表 [(a, b)]
+-- 其中 a 为模块属性加值，b 为对应属性洞三满级数值
 calcCoef :: [(Int, Int)] -> (Int, Int)
 -- for every pair (a, b)
 -- a <= b * p / 1000 < a + 1
@@ -36,8 +41,13 @@ main = do
         arcResonance = Resonance {
             resLevel = 15,
             resActive = [(Double, 2), (O, 2), (L, 2), (J, 3), (S, 1), (T, 2), (BigX, 1)]
-        }
+        },
+        arcPsychube = SomePsychube $ (Psychube {
+            psyAsc = 4,
+            psyLevel = 60
+        } :: Psychube SilentAndAdoring)
     } :: Arcanist ThirtySeven
     let Just stat = getPlainStat arc
-        Just statMod = getResonanceStatMod arc
-    print $ applyMod stat statMod
+        Just resStatMod = getResonanceStatMod arc
+        Just psyStatMod = getPsychubeStatMod arc
+    print $ applyMod stat $ resStatMod <> psyStatMod

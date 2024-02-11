@@ -235,9 +235,27 @@ class IsArcanist arc where
 
 计算共鸣属性时需要知道角色类型和等级（满级属性决定主模块加成，基础面板决定百分比加值的实际效果），计算得到的属性如何表示？现在只能把一个类型声明为 HasStat，如何表示心相和 buff 等的百分比属性加成？
 
-尝试设计 HasStatBuff 的 typeclass，或者设计成数据类型更好？
+尝试设计 `HasStatBuff` 的 type class，或者设计成数据类型更好？
 
-将 Stat 和 StatMod 改成了数据类型，对于四个本身为 Int 的属性，有具体数字的加值（心相、共鸣主模块）和百分比加值两种，在同时有这两种时先应用百分比（然后取整），再应用具体数字加值.
+将 `Stat` 和 `StatMod` 改成了数据类型，对于四个本身为 `Int` 的属性，有具体数字的加值（心相、共鸣主模块）和百分比加值两种，在同时有这两种时先应用百分比（然后取整），再应用具体数字加值.
+
+尝试通过编译时遇到了新的问题.
+
+现在由于 `Arcanist` 的类型被写在了类型里，描述某个神秘学家的共鸣类型就需要建立一个类型到类型的映射，这里使用的是 associated type family，对于某个 "满足作为神秘学家的条件" 的类型 `arc`，`ArcResType arc` 是它的共鸣主类型.
+
+而共鸣主类型属于 kind `ResonanceType`，描述共鸣类型的属性写在 type class `IsResonanceType` 中. 主模块类型是不需要后续添加的（这一点被 `DataKinds` 定死了），然而 type class 是一个可以随时追加实现的模式，这是第一个问题.
+
+第二个问题是 associated type family 是写在 `IsArcanist arc` 中的，这里限定了共鸣的 kind，但没有限定它的 type class，导致之后写 instance 时不仅要给出 `IsAcanist arc` 的限制，还需要给出 `IsResonanceType (ArcResType arc)` 的限制，后者不能直接通过编译，需要开启 `FlexibleContexts` 和 `UndecidableInstances` 两个扩展才能通过编译（并且这样一个限制还需要写两遍）.
+
+（其实这样能过编译就很厉害了（可能是扩展导致的？），因为 `ArcResType` 依赖于 `IsArcanist` 的 instance，而这两个限制在这里是并列的）
+
+有没有办法能将某一个 kind 下的所有 type 都声明成某个 type class 的 instance，或者给 associated type family 加入 instance 的限制？
+
+现在暂时使用 `ConstraintKinds` 扩展，将这些限制合并为一个限制.
+
+---
+
+心相的表示采用了和神秘学家定义相似的方法，但是目前需要在导出列表中枚举每个心相
 
 ---
 

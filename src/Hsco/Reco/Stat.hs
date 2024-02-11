@@ -127,3 +127,13 @@ applyMod (Stat {..}) (StatMod {..}) = Stat {
     healRate = healRate + healRateMod,
     peneRate = peneRate + peneRateMod
 }
+
+--- stat generator using linear interpolation {{{
+linearInterpolate :: (Int, Int) -> (Int, Int) -> Int -> Double
+linearInterpolate (x1', y1') (x2', y2') = \x -> (y2 - y1) / (x2 - x1) * (fromIntegral x - x1) + y1 where
+    x1 = fromIntegral x1'
+    y1 = fromIntegral y1'
+    x2 = fromIntegral x2'
+    y2 = fromIntegral y2'
+
+--- }}}

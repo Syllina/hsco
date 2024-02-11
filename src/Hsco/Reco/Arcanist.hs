@@ -1,4 +1,4 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving, DataKinds, KindSignatures, GADTs, TypeApplications, ScopedTypeVariables, AllowAmbiguousTypes, QuantifiedConstraints, TypeFamilies, FlexibleContexts, UndecidableInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving, DataKinds, KindSignatures, GADTs, TypeApplications, ScopedTypeVariables, AllowAmbiguousTypes, QuantifiedConstraints, TypeFamilies, FlexibleContexts, UndecidableInstances, ConstraintKinds #-}
 module Hsco.Reco.Arcanist (
     StatGenerator,
     fromRaw,
@@ -11,27 +11,46 @@ module Hsco.Reco.Arcanist (
     SomeArcanist(..),
     ArcanistInst(..),
     module Hsco.Reco.Resonance,
+    module Hsco.Reco.Psychube,
     module Hsco.Reco.Stat
 ) where
 
 import Hsco.Reco.Resonance hiding (getStatMod)
+-- preventing possible name clashes (for getStatMod)
 import qualified Hsco.Reco.Resonance as Resonance
+import Hsco.Reco.Psychube hiding (getStatMod)
+import qualified Hsco.Reco.Psychube as Psychube
 import Hsco.Reco.Stat
 
+-- generate arcanist plain stat using fixed stat
+-- at certain levels which is given in the code
+-- for each arcanist respectively
 data ArcanistPlainData = ArcanistPlainData {
     atkGen, hpGen, rdefGen, mdefGen, critGen :: StatGenerator
 }
 
+-- this type class is intended to be implemented
+-- for every arcanist (type)
 class IsArcanist arc where
+    -- name of the arcanist
+    -- currently just a placeholder
     arcName :: Text
-    arcPlainStat :: ArcanistPlainData
+    -- constant stat at certain levels which
+    -- is used to generate stat at all levels
+    arcPlainData :: ArcanistPlainData
+    -- 共鸣主模块类型
     type ArcResType arc :: ResonanceType
 
+-- this is the type class of the arcanist instance
+-- which has insight, level, etc.
 class ArcanistInst arc where
     getName :: arc -> Text
     getPlainStat :: arc -> Maybe Stat
     -- 如果等级可以从类型上验证这里就不需要 Maybe 了
     getResonanceStatMod :: arc -> Maybe StatMod
+    getPsychubeStatMod :: arc -> Maybe StatMod
+
+type IsArcanist' arc = (IsArcanist arc, IsResonanceType (ArcResType arc))
 
 -- this could be a kind!
 newtype Insight = Insight Int deriving newtype (Eq, Num)
@@ -40,13 +59,14 @@ newtype Level = Level Int
 data (IsArcanist arc) => Arcanist arc = Arcanist {
     arcInsight :: Insight,
     arcLevel :: Level,
-    arcResonance :: Resonance (ArcResType arc)
+    arcResonance :: Resonance (ArcResType arc),
+    arcPsychube :: SomePsychube
 }
 
-instance forall arc. (IsArcanist arc, IsResonanceType (ArcResType arc)) => ArcanistInst (Arcanist arc) where
+instance forall arc. IsArcanist' arc => ArcanistInst (Arcanist arc) where
     getName _ = arcName @arc
     getPlainStat (Arcanist {..}) = do
-        let usingGen gen = genStatMaybe (arcInsight, arcLevel) (gen $ arcPlainStat @arc)
+        let usingGen gen = genStatMaybe (arcInsight, arcLevel) (gen $ arcPlainData @arc)
         atk <- usingGen atkGen
         hp <- usingGen hpGen
         realDef <- usingGen rdefGen
@@ -66,23 +86,18 @@ instance forall arc. (IsArcanist arc, IsResonanceType (ArcResType arc)) => Arcan
             arcLevel = Level 60
         }
         Resonance.getStatMod @(ArcResType arc) arcResonance stat360
+    getPsychubeStatMod (Arcanist {..}) = Psychube.getStatMod arcPsychube
 
 data SomeArcanist where
-    SomeArcanist :: (IsArcanist a, IsResonanceType (ArcResType a)) => Arcanist a -> SomeArcanist
+    SomeArcanist :: IsArcanist' arc => Arcanist arc -> SomeArcanist
 instance ArcanistInst SomeArcanist where
     getName (SomeArcanist arc) = getName arc
     getResonanceStatMod (SomeArcanist arc) = getResonanceStatMod arc
 
-linearInterpolate :: (Int, Int) -> (Int, Int) -> Int -> Double
-linearInterpolate (x1', y1') (x2', y2') = \x -> (y2 - y1) / (x2 - x1) * (fromIntegral x - x1) + y1 where
-    x1 = fromIntegral x1'
-    y1 = fromIntegral y1'
-    x2 = fromIntegral x2'
-    y2 = fromIntegral y2'
 
 data StatGenerator = StatGenerator {
     insight :: Int, -- insight bonus
-    stat01 :: Int, -- statibute at insight 0 level 1
+    stat01 :: Int, -- stat at insight 0 level 1
     stat030 :: Int,
     stat140 :: Int,
     stat250 :: Int,
