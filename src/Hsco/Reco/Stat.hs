@@ -112,8 +112,9 @@ applyMod :: Stat -> StatMod -> Stat
 applyMod (Stat {..}) (StatMod {..}) = Stat {
     atk = atkMod + floor (fromIntegral atk * (1 + atkRate)),
     hp = hpMod + floor (fromIntegral hp * (1 + hpRate)),
-    realDef = realDefMod + floor (fromIntegral realDef * (1 + realDefRate)),
-    mentDef = mentDefMod + floor (fromIntegral mentDef * (1 + mentDefRate)),
+    -- temp change
+    realDef = realDefMod + ceiling (fromIntegral realDef * (1 + realDefRate)),
+    mentDef = mentDefMod + ceiling (fromIntegral mentDef * (1 + mentDefRate)),
     critRate = critRate + critRateMod,
     critRes = critRes + critResMod,
     critDmg = critDmg + critDmgMod,

@@ -33,6 +33,7 @@ library
       Hsco.Reco.Arcanist
       Hsco.Reco.Arcanist.ThirtySeven
       Hsco.Reco.ArcanistList
+      Hsco.Reco.Damage
       Hsco.Reco.Psychube
       Hsco.Reco.Resonance
       Hsco.Reco.Stat
