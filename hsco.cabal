@@ -29,7 +29,6 @@ library
   exposed-modules:
       Hsco
   other-modules:
-      Hsco.Todo
       Paths_hsco
   autogen-modules:
       Paths_hsco
