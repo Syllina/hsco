@@ -39,8 +39,12 @@ library
       OverloadedStrings , RecordWildCards , DerivingStrategies
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wmissing-deriving-strategies -fhide-source-paths
   build-depends:
-      base >=4.7 && <5
+      ansi-terminal
+    , base >=4.7 && <5
+    , colour
     , relude
+    , text-show
+    , text-show-instances
     , time
   mixins:
       base hiding (Prelude)
@@ -59,9 +63,13 @@ executable hsco
       OverloadedStrings , RecordWildCards , DerivingStrategies
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wmissing-deriving-strategies -fhide-source-paths -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      ansi-terminal
+    , base >=4.7 && <5
+    , colour
     , hsco
     , relude
+    , text-show
+    , text-show-instances
     , time
   mixins:
       base hiding (Prelude)
@@ -81,9 +89,13 @@ test-suite hsco-test
       OverloadedStrings , RecordWildCards , DerivingStrategies
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wmissing-deriving-strategies -fhide-source-paths -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      ansi-terminal
+    , base >=4.7 && <5
+    , colour
     , hsco
     , relude
+    , text-show
+    , text-show-instances
     , time
   mixins:
       base hiding (Prelude)
@@ -103,10 +115,14 @@ benchmark hsco-benchmark
       OverloadedStrings , RecordWildCards , DerivingStrategies
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wmissing-deriving-strategies -fhide-source-paths -threaded -rtspots -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      ansi-terminal
+    , base >=4.7 && <5
+    , colour
     , gauge
     , hsco
     , relude
+    , text-show
+    , text-show-instances
     , time
   mixins:
       base hiding (Prelude)

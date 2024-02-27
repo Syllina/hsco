@@ -6,10 +6,8 @@ Maintainer: Syllinxia <syllinxia@gmail.com>
 The very least comprehensive personal haskell tool
 -}
 
-module Hsco
-       ( someFunc
-       ) where
+module Hsco (
+    module Hsco.Todo
+) where
 
-
-someFunc :: IO ()
-someFunc = putStrLn ("someFunc" :: String)
+import Hsco.Todo

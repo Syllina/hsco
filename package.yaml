@@ -22,6 +22,10 @@ dependencies:
   mixin:
     - (Relude as Prelude)
 - time
+- ansi-terminal
+- colour
+- text-show
+- text-show-instances
 
 ghc-options:
 - -Wall
