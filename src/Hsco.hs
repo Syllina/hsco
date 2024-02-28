@@ -10,6 +10,9 @@ module Hsco
        ( someFunc
        ) where
 
+-- module Hsco where
+-- module Hsco () where
+--
 
 someFunc :: IO ()
 someFunc = putStrLn ("someFunc" :: String)
