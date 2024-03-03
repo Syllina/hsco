@@ -24,6 +24,7 @@ dependencies:
 - time
 - ansi-terminal
 - colour
+- text
 - text-show
 - text-show-instances
 - cereal

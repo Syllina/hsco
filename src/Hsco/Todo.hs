@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric, GeneralizedNewtypeDeriving #-}
 module Hsco.Todo where
 
 import Data.Time
@@ -60,6 +60,7 @@ instance TextShow TodoItem where
 
 newtype TodoList = TodoList [TodoItem]
     deriving stock (Show, Read, Generic)
+    deriving newtype (Semigroup, Monoid, TextShow)
 
 defList :: TodoList
 defList = TodoList [defItem]

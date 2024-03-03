@@ -46,6 +46,7 @@ library
     , colour
     , optparse-applicative
     , relude
+    , text
     , text-show
     , text-show-instances
     , time
@@ -73,6 +74,7 @@ executable hsco
     , hsco
     , optparse-applicative
     , relude
+    , text
     , text-show
     , text-show-instances
     , time
@@ -101,6 +103,7 @@ test-suite hsco-test
     , hsco
     , optparse-applicative
     , relude
+    , text
     , text-show
     , text-show-instances
     , time
@@ -130,6 +133,7 @@ benchmark hsco-benchmark
     , hsco
     , optparse-applicative
     , relude
+    , text
     , text-show
     , text-show-instances
     , time
