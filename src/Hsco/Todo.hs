@@ -1,8 +1,5 @@
-module Hsco.Todo (
-    Tag(..),
-    defItem, defList,
-    todoLoad, todoSave
-) where
+{-# LANGUAGE DeriveGeneric #-}
+module Hsco.Todo where
 
 import Data.Time
 import TextShow
@@ -10,7 +7,7 @@ import TextShow.Data.Time ()
 -- import System.IO
 
 newtype Tag = Tag [Text] -- a.b.c ==> [a, b, c] ==> /a/b/c/{title}
-    deriving stock (Eq, Show, Read)
+    deriving stock (Eq, Show, Read, Generic)
 instance TextShow Tag where
     -- [a, b, c] ===> /a/b/c
     showb (Tag tag) = mconcat $ (fromText "/" :) $ intersperse (fromText "/") $ fmap fromText tag
@@ -21,7 +18,7 @@ isSubTagOf (Tag a) (Tag b) = a `isPrefixOf` b
 data Priority = Priority {
     urgency :: Int,
     importance :: Int
-} deriving stock (Show, Read)
+} deriving stock (Show, Read, Generic)
 instance TextShow Priority where
     showb (Priority {..}) =
         fromText "urg " <> showb urgency <>
@@ -30,16 +27,17 @@ instance TextShow Priority where
 data TodoItem = TodoItem {
     title :: Text,
     description :: Maybe Text,
-    deadline :: Maybe LocalTime,
+    deadline :: Maybe UTCTime,
     tags :: [Tag],
     priority :: Priority
-} deriving stock (Show, Read)
+} deriving stock (Show, Read, Generic)
 
 defItem :: TodoItem
 defItem = TodoItem {
     title = "114514",
     description = Just "1919810",
-    deadline = Nothing,
+    -- deadline = Nothing,
+    deadline = Just (UTCTime (fromGregorian 2024 3 3) (timeOfDayToTime (midday))),
     tags = [Tag ["a", "b"]],
     priority = Priority {
         urgency = 10,
@@ -60,7 +58,9 @@ instance TextShow TodoItem where
 
 -- data TodoListNode = TagNode Text | ItemNode TodoItem
 
-newtype TodoList = TodoList [TodoItem] deriving stock (Show, Read)
+newtype TodoList = TodoList [TodoItem]
+    deriving stock (Show, Read, Generic)
+
 defList :: TodoList
 defList = TodoList [defItem]
 
@@ -72,9 +72,3 @@ todoWithTagsRec :: TodoList -> [Tag] -> TodoList
 todoWithTagsRec (TodoList list) queryTags = TodoList $ filter hasTag list where
     hasTag (TodoItem {..}) = or [x `isSubTagOf` y | x <- queryTags, y <- tags]
 
-todoSave :: FilePath -> TodoList -> IO ()
--- todoSave fp list = withFile fp WriteMode $ \hdl -> hPrint hdl list
-todoSave fp list = writeFile fp $ show list
-todoLoad :: FilePath -> IO (Maybe TodoList)
--- todoLoad fp = withFile fp ReadMode $ \hdl -> 
-todoLoad fp = readFile fp >>= pure . readMaybe

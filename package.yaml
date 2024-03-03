@@ -26,6 +26,8 @@ dependencies:
 - colour
 - text-show
 - text-show-instances
+- cereal
+- optparse-applicative
 
 ghc-options:
 - -Wall

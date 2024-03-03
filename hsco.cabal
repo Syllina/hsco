@@ -30,6 +30,7 @@ library
       Hsco
   other-modules:
       Hsco.Todo
+      Hsco.Todo.Serialize
       Paths_hsco
   autogen-modules:
       Paths_hsco
@@ -41,7 +42,9 @@ library
   build-depends:
       ansi-terminal
     , base >=4.7 && <5
+    , cereal
     , colour
+    , optparse-applicative
     , relude
     , text-show
     , text-show-instances
@@ -65,8 +68,10 @@ executable hsco
   build-depends:
       ansi-terminal
     , base >=4.7 && <5
+    , cereal
     , colour
     , hsco
+    , optparse-applicative
     , relude
     , text-show
     , text-show-instances
@@ -91,8 +96,10 @@ test-suite hsco-test
   build-depends:
       ansi-terminal
     , base >=4.7 && <5
+    , cereal
     , colour
     , hsco
+    , optparse-applicative
     , relude
     , text-show
     , text-show-instances
@@ -117,9 +124,11 @@ benchmark hsco-benchmark
   build-depends:
       ansi-terminal
     , base >=4.7 && <5
+    , cereal
     , colour
     , gauge
     , hsco
+    , optparse-applicative
     , relude
     , text-show
     , text-show-instances
