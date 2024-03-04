@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE DeriveGeneric, GeneralizedNewtypeDeriving, FlexibleContexts #-}
 module Hsco.Todo where
 
 import Data.Time
@@ -6,11 +6,26 @@ import TextShow
 import TextShow.Data.Time ()
 -- import System.IO
 
+import Text.Parsec as P
+import qualified Data.Text as T
+
 newtype Tag = Tag [Text] -- a.b.c ==> [a, b, c] ==> /a/b/c/{title}
     deriving stock (Eq, Show, Read, Generic)
 instance TextShow Tag where
     -- [a, b, c] ===> /a/b/c
     showb (Tag tag) = mconcat $ (fromText "/" :) $ intersperse (fromText "/") $ fmap fromText tag
+
+tagParser :: Stream s Identity Char => Parsec s () Tag
+tagParser = fmap Tag $ P.many (char '/' *> text) where
+    text = fmap T.pack $ P.many alphaNum
+
+tagsParser :: Stream s Identity Char => Parsec s () [Tag]
+tagsParser = commaSep tagParser where
+    commaSep p = p `sepBy` comma
+    comma = spaces *> char ',' <* spaces
+
+readTags :: String -> Maybe [Tag]
+readTags = either (const Nothing) Just . parse tagsParser ""
 
 isSubTagOf :: Tag -> Tag -> Bool
 isSubTagOf (Tag a) (Tag b) = a `isPrefixOf` b
@@ -60,7 +75,12 @@ instance TextShow TodoItem where
 
 newtype TodoList = TodoList [TodoItem]
     deriving stock (Show, Read, Generic)
-    deriving newtype (Semigroup, Monoid, TextShow)
+    deriving newtype (Semigroup, Monoid)
+
+instance TextShow TodoList where
+    showb (TodoList []) = fromText "nothing to do"
+    showb (TodoList items) = flip foldMap (zip ([0..]::[Int]) items) $ \(idx, item) ->
+        fromText "[" <> showb idx <> fromText "] " <> showb item <> fromText "\n"
 
 defList :: TodoList
 defList = TodoList [defItem]

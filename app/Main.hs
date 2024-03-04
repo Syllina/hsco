@@ -22,34 +22,41 @@ withSGR sgr = bracket_ (setSGR sgr) (setSGR [Reset])
 withRGBColor :: Colour Float -> IO a -> IO a
 withRGBColor clr = withSGR [SetRGBColor Foreground clr]
 
-data Command = Test | Save FilePath | Load FilePath | Add FilePath | Create FilePath
+data TodoCommand = Save FilePath | Load FilePath | Add FilePath | Create FilePath
+
+data Command = Todo TodoCommand | Test
 
 mainParser :: Parser Command
 mainParser = subparser
-    ( command "test" (info (pure Test) ( progDesc "Test" ))
-   <> command "save" (info saveParser ( progDesc "Save" ))
+    ( command "todo" (info (fmap Todo todoParser) ( progDesc "TODO manager" ))
+   <> command "test" (info (pure Test) ( progDesc "debug" ))
+    )
+
+todoParser :: Parser TodoCommand
+todoParser = subparser
+    ( command "save" (info saveParser ( progDesc "Save" ))
    <> command "load" (info loadParser ( progDesc "Load" ))
    <> command "add" (info addParser ( progDesc "Add" ))
    <> command "create" (info createParser ( progDesc "Create" ))
     ) where
     saveParser = fmap Save $ argument str (metavar "FILE" <> action "file")
-    loadParser = fmap Load $ argument str (metavar "FILE" <> action "file")
-    addParser = fmap Add $ argument str (metavar "FILE" <> action "file")
-    createParser = fmap Create $ argument str (metavar "FILE" <> action "file")
+    loadParser = fmap Load $ argument str (metavar "FILE" <> value "todo.dat" <> action "file")
+    addParser = fmap Add $ argument str (metavar "FILE" <> value "todo.dat" <> action "file")
+    createParser = fmap Create $ argument str (metavar "FILE" <> value "todo.dat" <> action "file")
 
 main :: IO ()
 main = do
     cmd <- execParser $ info (mainParser <**> helper)
         ( fullDesc
-       <> progDesc "TEST"
+       <> progDesc "hsco hsco hsco hsco"
        <> header "hsco"
         )
     case cmd of
         Test -> testFunc
-        Save fp -> saveFunc fp
-        Load fp -> loadFunc fp
-        Add fp -> addFunc fp
-        Create fp -> createFunc fp
+        Todo (Save fp) -> saveFunc fp
+        Todo (Load fp) -> loadFunc fp
+        Todo (Add fp) -> addFunc fp
+        Todo (Create fp) -> createFunc fp
 
 testFunc :: IO ()
 testFunc = do
@@ -73,7 +80,8 @@ saveFunc :: FilePath -> IO ()
 saveFunc fp = todoSave fp defList
 
 loadFunc :: FilePath -> IO ()
-loadFunc fp = todoLoad fp >>= printT
+-- todoLoad fp :: IO (Maybe TodoList)
+loadFunc fp = todoLoad fp >>= maybe (putTextLn "load error") printT
 
 addFunc :: FilePath -> IO ()
 addFunc fp = do
@@ -81,20 +89,20 @@ addFunc fp = do
     description <- fmap strMaybe $ askLine "Description (optional): "
     -- deadline <- askLine "Deadline: "
     deadline <- pure Nothing
-    tags <- fmap (\x -> [x]) $ fmap Tag $ fmap words $ askLine "Tags: "
+    tags <- fmap (readTags . T.unpack) $ askLine "Tags: "
     putTextLn "Priority:"
     urgency <- fmap (readMaybe . T.unpack) $ askLine "  Urgency: " :: IO (Maybe Int)
     importance <- fmap (readMaybe . T.unpack) $ askLine "  Importance: " :: IO (Maybe Int)
     let priority = Priority <$> urgency <*> importance
-    let item = fmap (TodoItem title description deadline tags) priority
+    let item = fmap (TodoItem title description deadline) tags <*> priority
     list <- todoLoad fp
     let action = do
             list' <- list
             item' <- item
             pure $ do
-                putTextLn $ "Add item" <> showt item'
+                putTextLn $ "Add item:\n" <> showt item'
                 todoSave fp $ list' <> TodoList [item']
-    maybe (pure ()) id action
+    maybe (putTextLn "Item parsing error") id action
     where
         askLine st = putText st >> hFlush stdout >> getLine
         strMaybe st = T.strip st & \st -> if T.null st then Nothing else Just st

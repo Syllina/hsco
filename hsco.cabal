@@ -45,6 +45,7 @@ library
     , cereal
     , colour
     , optparse-applicative
+    , parsec
     , relude
     , text
     , text-show
@@ -73,6 +74,7 @@ executable hsco
     , colour
     , hsco
     , optparse-applicative
+    , parsec
     , relude
     , text
     , text-show
@@ -102,6 +104,7 @@ test-suite hsco-test
     , colour
     , hsco
     , optparse-applicative
+    , parsec
     , relude
     , text
     , text-show
@@ -132,6 +135,7 @@ benchmark hsco-benchmark
     , gauge
     , hsco
     , optparse-applicative
+    , parsec
     , relude
     , text
     , text-show

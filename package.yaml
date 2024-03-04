@@ -29,6 +29,7 @@ dependencies:
 - text-show-instances
 - cereal
 - optparse-applicative
+- parsec
 
 ghc-options:
 - -Wall
