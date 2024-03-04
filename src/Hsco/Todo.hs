@@ -16,8 +16,8 @@ instance TextShow Tag where
     showb (Tag tag) = mconcat $ (fromText "/" :) $ intersperse (fromText "/") $ fmap fromText tag
 
 tagParser :: Stream s Identity Char => Parsec s () Tag
-tagParser = fmap Tag $ P.many (char '/' *> text) where
-    text = fmap T.pack $ P.many alphaNum
+tagParser = fmap Tag $ char '/' *> (text `sepBy` char '/') where
+    text = fmap T.pack $ P.many1 alphaNum
 
 tagsParser :: Stream s Identity Char => Parsec s () [Tag]
 tagsParser = commaSep tagParser where
@@ -93,3 +93,8 @@ todoWithTagsRec :: TodoList -> [Tag] -> TodoList
 todoWithTagsRec (TodoList list) queryTags = TodoList $ filter hasTag list where
     hasTag (TodoItem {..}) = or [x `isSubTagOf` y | x <- queryTags, y <- tags]
 
+todoDelete :: TodoList -> Int -> Maybe (TodoItem, TodoList)
+todoDelete (TodoList list) idx = do
+    let (a, b') = splitAt idx list
+    (it, b) <- Prelude.uncons b'
+    pure (it, TodoList (a <> b))

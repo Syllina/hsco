@@ -22,7 +22,7 @@ withSGR sgr = bracket_ (setSGR sgr) (setSGR [Reset])
 withRGBColor :: Colour Float -> IO a -> IO a
 withRGBColor clr = withSGR [SetRGBColor Foreground clr]
 
-data TodoCommand = Save FilePath | Load FilePath | Add FilePath | Create FilePath
+data TodoCommand = Save FilePath | Load FilePath | Add FilePath | Create FilePath | List FilePath Bool | Done FilePath Int
 
 data Command = Todo TodoCommand | Test
 
@@ -38,11 +38,16 @@ todoParser = subparser
    <> command "load" (info loadParser ( progDesc "Load" ))
    <> command "add" (info addParser ( progDesc "Add" ))
    <> command "create" (info createParser ( progDesc "Create" ))
+   <> command "ls" (info listParser ( progDesc "List" ))
+   <> command "done" (info doneParser ( progDesc "Done" ))
     ) where
+    fileArg = strOption ( long "file" <> short 'f' <> metavar "FILE" <> value "todo.dat" <> action "file")
     saveParser = fmap Save $ argument str (metavar "FILE" <> action "file")
-    loadParser = fmap Load $ argument str (metavar "FILE" <> value "todo.dat" <> action "file")
-    addParser = fmap Add $ argument str (metavar "FILE" <> value "todo.dat" <> action "file")
-    createParser = fmap Create $ argument str (metavar "FILE" <> value "todo.dat" <> action "file")
+    loadParser = fmap Load fileArg
+    addParser = fmap Add fileArg
+    createParser = fmap Create fileArg
+    listParser = List <$> fileArg <*> (switch ( long "recursive" <> short 'R' <> help "list items recursively"))
+    doneParser = Done <$> fileArg <*> (argument auto (metavar "INDEX"))
 
 main :: IO ()
 main = do
@@ -53,10 +58,31 @@ main = do
         )
     case cmd of
         Test -> testFunc
-        Todo (Save fp) -> saveFunc fp
-        Todo (Load fp) -> loadFunc fp
-        Todo (Add fp) -> addFunc fp
+        Todo (Save fp) -> todoSave fp defList
+        Todo (Load fp) -> todoLoad fp >>= maybe (putTextLn "load error") printT
+        Todo (Add fp) -> ((liftA2.liftA2) (addAction fp) (todoLoad fp) getTodoItem) >>= maybe (putTextLn "item parsing error") id
         Todo (Create fp) -> createFunc fp
+        Todo (List fp rec) -> ((liftA2.liftA2) (lsAction rec) (todoLoad fp) getTags) >>= maybe (putTextLn "ls error") id
+        Todo (Done fp idx) -> ((fmap.fmap) (doneAction fp idx) (todoLoad fp)) >>= maybe (putTextLn "done error") id
+        where
+            addAction fp list item = do
+                putTextLn $ "Add item:\n" <> showt item
+                todoSave fp $ list <> TodoList [item]
+            getTags = fmap (readTags.T.unpack) $ (putText "Input tags: " >> hFlush stdout >> getLine)
+            lsAction False list tags = do
+                putTextLn $ "Items containing tags " <> showt tags <> ":"
+                printT $ todoWithTags list tags
+            lsAction True list tags = do
+                putTextLn $ "Items starting with tags " <> showt tags <> ":"
+                printT $ todoWithTagsRec list tags
+            doneAction fp idx list = maybe
+                    (putTextLn $ "Item #" <> showt idx <> " not found.")
+                    (\(it, list') -> do
+                        putTextLn "Finishing item:"
+                        printT it
+                        todoSave fp list')
+                    (todoDelete list idx)
+            
 
 testFunc :: IO ()
 testFunc = do
@@ -76,15 +102,8 @@ testFunc = do
         else
             putTextLn "Standard output does not support 'ANSI' escape codes."
 
-saveFunc :: FilePath -> IO ()
-saveFunc fp = todoSave fp defList
-
-loadFunc :: FilePath -> IO ()
--- todoLoad fp :: IO (Maybe TodoList)
-loadFunc fp = todoLoad fp >>= maybe (putTextLn "load error") printT
-
-addFunc :: FilePath -> IO ()
-addFunc fp = do
+getTodoItem :: IO (Maybe TodoItem)
+getTodoItem = do
     title <- askLine "Title: "
     description <- fmap strMaybe $ askLine "Description (optional): "
     -- deadline <- askLine "Deadline: "
@@ -94,18 +113,17 @@ addFunc fp = do
     urgency <- fmap (readMaybe . T.unpack) $ askLine "  Urgency: " :: IO (Maybe Int)
     importance <- fmap (readMaybe . T.unpack) $ askLine "  Importance: " :: IO (Maybe Int)
     let priority = Priority <$> urgency <*> importance
-    let item = fmap (TodoItem title description deadline) tags <*> priority
-    list <- todoLoad fp
-    let action = do
-            list' <- list
-            item' <- item
-            pure $ do
-                putTextLn $ "Add item:\n" <> showt item'
-                todoSave fp $ list' <> TodoList [item']
-    maybe (putTextLn "Item parsing error") id action
+    pure $ fmap (TodoItem title description deadline) tags <*> priority
     where
         askLine st = putText st >> hFlush stdout >> getLine
         strMaybe st = T.strip st & \st -> if T.null st then Nothing else Just st
+
+-- todoLoad fp :: IO (Maybe TodoList)
+-- getTodoItem :: IO (Maybe TodoItem)
+-- action :: TodoList -> Item -> IO ()
+-- liftA2 :: Applicative f => a -> b -> c -> f a -> f b -> f c
+-- liftA2 action :: Maybe TodoList -> Maybe Item -> Maybe IO ()
+-- liftA2 (liftA2 action) :: IO (Maybe TodoList) -> IO (Maybe TodoItem) -> IO (Maybe IO ())
 
 createFunc :: FilePath -> IO ()
 createFunc fp = todoSave fp mempty
