@@ -21,7 +21,6 @@ dependencies:
 - name: relude
   mixin:
     - (Relude as Prelude)
-- time
 
 ghc-options:
 - -Wall
