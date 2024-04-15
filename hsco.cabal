@@ -38,8 +38,15 @@ library
       OverloadedStrings , RecordWildCards , DerivingStrategies
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wmissing-deriving-strategies -fhide-source-paths
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
+    , bytestring
+    , lens
+    , lens-aeson
     , relude
+    , text
+    , text-show
+    , wreq
   mixins:
       base hiding (Prelude)
     , relude (Relude as Prelude)
@@ -57,9 +64,16 @@ executable hsco
       OverloadedStrings , RecordWildCards , DerivingStrategies
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wmissing-deriving-strategies -fhide-source-paths -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
+    , bytestring
     , hsco
+    , lens
+    , lens-aeson
     , relude
+    , text
+    , text-show
+    , wreq
   mixins:
       base hiding (Prelude)
     , relude (Relude as Prelude)
@@ -78,9 +92,16 @@ test-suite hsco-test
       OverloadedStrings , RecordWildCards , DerivingStrategies
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wmissing-deriving-strategies -fhide-source-paths -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
+    , bytestring
     , hsco
+    , lens
+    , lens-aeson
     , relude
+    , text
+    , text-show
+    , wreq
   mixins:
       base hiding (Prelude)
     , relude (Relude as Prelude)
@@ -99,10 +120,17 @@ benchmark hsco-benchmark
       OverloadedStrings , RecordWildCards , DerivingStrategies
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wmissing-deriving-strategies -fhide-source-paths -threaded -rtspots -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      aeson
+    , base >=4.7 && <5
+    , bytestring
     , gauge
     , hsco
+    , lens
+    , lens-aeson
     , relude
+    , text
+    , text-show
+    , wreq
   mixins:
       base hiding (Prelude)
     , relude (Relude as Prelude)

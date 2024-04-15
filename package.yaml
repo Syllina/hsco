@@ -21,6 +21,13 @@ dependencies:
 - name: relude
   mixin:
     - (Relude as Prelude)
+- wreq
+- lens
+- aeson
+- lens-aeson
+- text
+- text-show
+- bytestring
 
 ghc-options:
 - -Wall
