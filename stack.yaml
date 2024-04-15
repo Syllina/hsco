@@ -1,5 +1,2 @@
 resolver:
-  url: https://mirrors.tuna.tsinghua.edu.cn/stackage/stackage-snapshots/lts/21/16.yaml
-
-extra-deps:
-  - encoding-0.8.9
+  url: https://mirrors.tuna.tsinghua.edu.cn/stackage/stackage-snapshots/lts/22/6.yaml

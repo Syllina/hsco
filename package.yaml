@@ -1,0 +1,91 @@
+name:                hsco
+version:             0.0.0.0
+github:              "Syllina/hsco"
+# license:             MIT
+license-file:        LICENSE
+author:              "Syllinxia"
+maintainer:          "Syllinxia <syllinxia@gmail.com>"
+copyright:           "2023 Syllinxia"
+synopsis:            "The very least comprehensive personal haskell tool"
+description:         "The very least comprehensive personal haskell tool"
+category:            mit, program
+extra-doc-files:     [README.md, CHANGELOG.md]
+tested-with:         []
+extra-source-files:  []
+
+dependencies:
+- name: base
+  version: ">= 4.7 && < 5"
+  mixin:
+    - hiding (Prelude)
+- name: relude
+  mixin:
+    - (Relude as Prelude)
+- wreq
+- scalpel
+- lens
+- bytestring
+- text
+- monad-logger
+- mtl
+- exceptions
+- aeson
+- lens-aeson
+- parsec
+- text-show
+- haskeline
+
+ghc-options:
+- -Wall
+- -Wcompat
+- -Widentities
+- -Wincomplete-record-updates
+- -Wincomplete-uni-patterns
+- -Wmissing-export-lists
+- -Wmissing-home-modules
+- -Wpartial-fields
+- -Wredundant-constraints
+- -Wmissing-deriving-strategies
+- -fhide-source-paths
+
+default-extensions:  OverloadedStrings
+                   , RecordWildCards
+                   , DerivingStrategies
+
+library:
+  source-dirs: src
+  exposed-modules: Hsco
+
+executables:
+  hsco:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - hsco
+
+tests:
+  hsco-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - hsco
+
+benchmarks:
+  hsco-benchmark:
+    main:                Main.hs
+    source-dirs:         benchmark
+    dependencies:
+    - hsco
+    - gauge
+    ghc-options:
+    - -threaded
+    - -rtspots
+    - -with-rtsopts=-N
