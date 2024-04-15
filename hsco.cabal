@@ -40,7 +40,6 @@ library
   build-depends:
       base >=4.7 && <5
     , relude
-    , time
   mixins:
       base hiding (Prelude)
     , relude (Relude as Prelude)
@@ -61,7 +60,6 @@ executable hsco
       base >=4.7 && <5
     , hsco
     , relude
-    , time
   mixins:
       base hiding (Prelude)
     , relude (Relude as Prelude)
@@ -83,7 +81,6 @@ test-suite hsco-test
       base >=4.7 && <5
     , hsco
     , relude
-    , time
   mixins:
       base hiding (Prelude)
     , relude (Relude as Prelude)
@@ -106,7 +103,6 @@ benchmark hsco-benchmark
     , gauge
     , hsco
     , relude
-    , time
   mixins:
       base hiding (Prelude)
     , relude (Relude as Prelude)
