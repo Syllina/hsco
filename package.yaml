@@ -34,6 +34,12 @@ dependencies:
 - parsec
 - text-show
 - haskeline
+- webdriver
+- http-reverse-proxy
+- http-client-tls
+- wai
+- warp
+- websockets
 
 ghc-options:
 - -Wall

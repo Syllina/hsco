@@ -49,6 +49,8 @@ library
     , bytestring
     , exceptions
     , haskeline
+    , http-client-tls
+    , http-reverse-proxy
     , lens
     , lens-aeson
     , monad-logger
@@ -58,6 +60,10 @@ library
     , scalpel
     , text
     , text-show
+    , wai
+    , warp
+    , webdriver
+    , websockets
     , wreq
   mixins:
       base hiding (Prelude)
@@ -82,6 +88,8 @@ executable hsco
     , exceptions
     , haskeline
     , hsco
+    , http-client-tls
+    , http-reverse-proxy
     , lens
     , lens-aeson
     , monad-logger
@@ -91,6 +99,10 @@ executable hsco
     , scalpel
     , text
     , text-show
+    , wai
+    , warp
+    , webdriver
+    , websockets
     , wreq
   mixins:
       base hiding (Prelude)
@@ -116,6 +128,8 @@ test-suite hsco-test
     , exceptions
     , haskeline
     , hsco
+    , http-client-tls
+    , http-reverse-proxy
     , lens
     , lens-aeson
     , monad-logger
@@ -125,6 +139,10 @@ test-suite hsco-test
     , scalpel
     , text
     , text-show
+    , wai
+    , warp
+    , webdriver
+    , websockets
     , wreq
   mixins:
       base hiding (Prelude)
@@ -151,6 +169,8 @@ benchmark hsco-benchmark
     , gauge
     , haskeline
     , hsco
+    , http-client-tls
+    , http-reverse-proxy
     , lens
     , lens-aeson
     , monad-logger
@@ -160,6 +180,10 @@ benchmark hsco-benchmark
     , scalpel
     , text
     , text-show
+    , wai
+    , warp
+    , webdriver
+    , websockets
     , wreq
   mixins:
       base hiding (Prelude)
