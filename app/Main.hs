@@ -28,12 +28,15 @@ instance TextShow ProjectSearchResult where
 
 data Project = Project {
     title :: Text,
-    projectID :: Text
+    projectID :: Text,
+    serverSide, clientSide :: Text
 }
 instance FromJSON Project where
     parseJSON = withObject "Project" $ \v -> do
         title <- v .: "title"
         projectID <- v .: "id"
+        serverSide <- v .: "server_side"
+        clientSide <- v .: "client_side"
         pure $ Project {..}
 
 instance TextShow Project where
@@ -153,16 +156,22 @@ modrinth = do
 
 main :: IO ()
 main = do
-    let modList = ["fabric-api", "sodium", "iris", "lithium", "modmenu", "entityculling", "ferrite-core", "indium", "sodium-extra", "reeses-sodium-options", "immediatelyfast", "yacl", "memoryleakfix", "lambdynamiclights", "simple-voice-chat", "audioplayer", "sound-physics-remastered", "replay-voice-chat", "replaymod", "server-replay", "enhanced-groups"]
+    -- TODO dependency
+    -- let modList = ["fabric-api", "sodium", "iris", "lithium", "modmenu", "entityculling", "ferrite-core", "indium", "sodium-extra", "reeses-sodium-options", "immediatelyfast", "yacl", "memoryleakfix", "lambdynamiclights", "simple-voice-chat", "audioplayer", "sound-physics-remastered", "replay-voice-chat", "replaymod", "server-replay", "enhanced-groups", "cloth-config", "betterf3", "freecam", "status-effect-bars", "gamma-utils", "chunks-fade-in", "zoomify", "appleskin", "continuity", "dynamic-fps", "modernfix", "xaeros-minimap", "xaeros-world-map", "moreculling", "3dskinlayers", "no-chat-reports", "krypton", "ebe", "melody", "konkrete", "fancymenu", "c2me-fabric", "fabricskyboxes", "chat-heads", "morechathistory", "paginatedadvancements", "fabrishot", "item-highlighter", "nvidium", "better-ping-display-fabric", "rrls", "distanthorizons", "auth-me", "dashloader", "fps-reducer", "dark-loading-screen", "iceberg", "item-borders", "advancement-screenshot", "areas", "beautified-chat-client", "collective", "death-backup", "dragon-drops-elytra", "fire-spread-tweaks", "just-mob-heads", "villager-death-messages"]
+    let modList = ["fabric-api", "sodium", "iris", "lithium", "modmenu", "entityculling", "ferrite-core", "indium", "sodium-extra", "reeses-sodium-options", "immediatelyfast", "yacl", "memoryleakfix", "lambdynamiclights", "simple-voice-chat", "audioplayer", "sound-physics-remastered", "replay-voice-chat", "replaymod", "enhanced-groups", "cloth-config", "betterf3", "freecam", "status-effect-bars", "gamma-utils", "chunks-fade-in", "zoomify", "appleskin", "continuity", "dynamic-fps", "modernfix", "xaeros-minimap", "xaeros-world-map", "moreculling", "no-chat-reports", "krypton", "ebe", "melody", "konkrete", "fancymenu", "c2me-fabric", "fabricskyboxes", "chat-heads", "morechathistory", "paginatedadvancements", "fabrishot", "item-highlighter", "nvidium", "better-ping-display-fabric", "rrls", "distanthorizons", "auth-me", "dashloader", "fps-reducer", "dark-loading-screen", "advancement-screenshot", "beautified-chat-client", "fabric-language-kotlin"]
     -- let modList = ["fabric-api", "sodium"]
     -- let curID = "AANobbMI"
     forM_ modList $ \curID -> do
         project <- getProject curID
         whenNothing_ project $ putTextLn $ "Project " <> curID <> " not found!"
+        -- whenJust project $ \project -> putTextLn $ title project <> " " <> clientSide project
         whenJust project $ \project -> do
-            putTextLn $ "Downloading " <> title project
-            versions <- getProjectVersions curID
-            maybe (putTextLn "No versions available!") (\versions -> whenNotNull versions (downloadVersion "mods/" . head)) versions
+            when (clientSide project /= "unsupported") $ do
+            -- when (serverSide project /= "unsupported") $ do
+                putTextLn $ "Downloading " <> title project
+                mversions <- getProjectVersions curID
+                let mversion = join $ fmap (viaNonEmpty head) mversions
+                maybe (putTextLn "No versions available!") (\version -> downloadVersion "mods/" version) mversion
 
 
 -- Download from github?
