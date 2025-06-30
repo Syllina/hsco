@@ -81,10 +81,10 @@ instance forall arc. IsArcanist' arc => ArcanistInst (Arcanist arc) where
             critDmg = 1.3 + fromIntegral critTech / 2000
         }
     getResonanceStatMod arc@(Arcanist {..}) = do
-        stat360 <- getPlainStat $ arc {
+        stat360 <- getPlainStat $ (arc {
             arcInsight = Insight 3,
             arcLevel = Level 60
-        }
+        } :: Arcanist arc)
         Resonance.getStatMod @(ArcResType arc) arcResonance stat360
     getPsychubeStatMod (Arcanist {..}) = Psychube.getStatMod arcPsychube
 
