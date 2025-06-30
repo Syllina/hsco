@@ -21,6 +21,14 @@ dependencies:
 - name: relude
   mixin:
     - (Relude as Prelude)
+- wreq
+- lens
+- scalpel
+- text
+- text-show
+- http-client
+- directory
+- parsec
 
 ghc-options:
 - -Wall

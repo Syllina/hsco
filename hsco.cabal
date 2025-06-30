@@ -1,6 +1,6 @@
 cabal-version: 2.0
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.35.2.
 --
 -- see: https://github.com/sol/hpack
 
@@ -39,7 +39,15 @@ library
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wmissing-deriving-strategies -fhide-source-paths
   build-depends:
       base >=4.7 && <5
+    , directory
+    , http-client
+    , lens
+    , parsec
     , relude
+    , scalpel
+    , text
+    , text-show
+    , wreq
   mixins:
       base hiding (Prelude)
     , relude (Relude as Prelude)
@@ -58,8 +66,16 @@ executable hsco
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wmissing-deriving-strategies -fhide-source-paths -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , directory
     , hsco
+    , http-client
+    , lens
+    , parsec
     , relude
+    , scalpel
+    , text
+    , text-show
+    , wreq
   mixins:
       base hiding (Prelude)
     , relude (Relude as Prelude)
@@ -79,8 +95,16 @@ test-suite hsco-test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wmissing-deriving-strategies -fhide-source-paths -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , directory
     , hsco
+    , http-client
+    , lens
+    , parsec
     , relude
+    , scalpel
+    , text
+    , text-show
+    , wreq
   mixins:
       base hiding (Prelude)
     , relude (Relude as Prelude)
@@ -100,9 +124,17 @@ benchmark hsco-benchmark
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wmissing-deriving-strategies -fhide-source-paths -threaded -rtspots -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , directory
     , gauge
     , hsco
+    , http-client
+    , lens
+    , parsec
     , relude
+    , scalpel
+    , text
+    , text-show
+    , wreq
   mixins:
       base hiding (Prelude)
     , relude (Relude as Prelude)
