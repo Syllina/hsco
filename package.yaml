@@ -23,6 +23,7 @@ dependencies:
     - (Relude as Prelude)
 - text
 - containers
+- text-show
 
 ghc-options:
 - -Wall
