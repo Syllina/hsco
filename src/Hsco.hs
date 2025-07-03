@@ -10,6 +10,8 @@ module Hsco
        ( someFunc
        ) where
 
+import Hsco.MC.Modrinth
+
 
 someFunc :: IO ()
-someFunc = putStrLn ("someFunc" :: String)
+someFunc = testModrinth

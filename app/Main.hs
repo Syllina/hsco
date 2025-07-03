@@ -2,19 +2,22 @@ module Main (main) where
 
 -- import Hsco (someFunc)
 import Hsco.MC (getProject, getProjectVersions, downloadVersion, title)
+import Hsco
 
 main :: IO ()
 main = do
-    let modList = ["fabric-api", "sodium", "iris", "lithium", "modmenu", "entityculling", "ferrite-core", "indium", "sodium-extra", "reeses-sodium-options", "immediatelyfast", "yacl", "memoryleakfix", "lambdynamiclights", "simple-voice-chat", "audioplayer", "sound-physics-remastered", "replay-voice-chat", "replaymod", "server-replay", "enhanced-groups"]
-    -- let modList = ["fabric-api", "sodium"]
-    -- let curID = "AANobbMI"
-    forM_ modList $ \curID -> do
-        project <- getProject curID
-        whenNothing_ project $ putTextLn $ "Project " <> curID <> " not found!"
-        whenJust project $ \project -> do
-            putTextLn $ "Downloading " <> title project
-            versions <- getProjectVersions curID
-            maybe (putTextLn "No versions available!") (\versions -> whenNotNull versions (downloadVersion "mods/" . head)) versions
+    someFunc
+    pure ()
+    -- let modList = ["fabric-api", "sodium", "iris", "lithium", "modmenu", "entityculling", "ferrite-core", "indium", "sodium-extra", "reeses-sodium-options", "immediatelyfast", "yacl", "memoryleakfix", "lambdynamiclights", "simple-voice-chat", "audioplayer", "sound-physics-remastered", "replay-voice-chat", "replaymod", "server-replay", "enhanced-groups"]
+    -- -- let modList = ["fabric-api", "sodium"]
+    -- -- let curID = "AANobbMI"
+    -- forM_ modList $ \curID -> do
+    --     project <- getProject curID
+    --     whenNothing_ project $ putTextLn $ "Project " <> curID <> " not found!"
+    --     whenJust project $ \project -> do
+    --         putTextLn $ "Downloading " <> title project
+    --         versions <- getProjectVersions curID
+    --         maybe (putTextLn "No versions available!") (\versions -> whenNotNull versions (downloadVersion "mods/" . head)) versions
 
 
 -- Download from github?
@@ -35,7 +38,7 @@ main = do
 -- LambDynamicLights; lambdynamiclights
 -- Simple Voice Chat; simple-voice-chat
 -- AudioPlayer; audioplayer
--- Sound Physics Remastered; sound-physics-remastered 
+-- Sound Physics Remastered; sound-physics-remastered
 -- Replay Voice Chat; replay-voice-chat
 -- ReplayMod; replaymod
 -- ServerReplay; server-replay

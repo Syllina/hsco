@@ -28,6 +28,8 @@ dependencies:
 - text
 - text-show
 - bytestring
+- containers
+- unordered-containers
 
 ghc-options:
 - -Wall

@@ -30,6 +30,7 @@ library
       Hsco
       Hsco.MC
   other-modules:
+      Hsco.MC.ModList
       Hsco.MC.Modrinth
       Paths_hsco
   autogen-modules:
@@ -43,11 +44,13 @@ library
       aeson
     , base >=4.7 && <5
     , bytestring
+    , containers
     , lens
     , lens-aeson
     , relude
     , text
     , text-show
+    , unordered-containers
     , wreq
   mixins:
       base hiding (Prelude)
@@ -69,12 +72,14 @@ executable hsco
       aeson
     , base >=4.7 && <5
     , bytestring
+    , containers
     , hsco
     , lens
     , lens-aeson
     , relude
     , text
     , text-show
+    , unordered-containers
     , wreq
   mixins:
       base hiding (Prelude)
@@ -97,12 +102,14 @@ test-suite hsco-test
       aeson
     , base >=4.7 && <5
     , bytestring
+    , containers
     , hsco
     , lens
     , lens-aeson
     , relude
     , text
     , text-show
+    , unordered-containers
     , wreq
   mixins:
       base hiding (Prelude)
@@ -125,6 +132,7 @@ benchmark hsco-benchmark
       aeson
     , base >=4.7 && <5
     , bytestring
+    , containers
     , gauge
     , hsco
     , lens
@@ -132,6 +140,7 @@ benchmark hsco-benchmark
     , relude
     , text
     , text-show
+    , unordered-containers
     , wreq
   mixins:
       base hiding (Prelude)

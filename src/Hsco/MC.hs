@@ -8,22 +8,22 @@ import qualified Data.Text as T (unpack)
 import TextShow
 
 import qualified Data.ByteString.Lazy as LBS
-import qualified Data.Sequence as Seq
-import qualified Data.Set as Set
+-- import qualified Data.Sequence as Seq
+-- import qualified Data.Set as Set
 
-newtype GameVersion = Text
-newtype ModID = Text
+-- newtype GameVersion = Text
+-- newtype ModID = Text
 
-downloadMod :: GameVersion -> ModID -> FilePath -> IO ()
-downloadMod = undefined
-
-downloadModDeps :: GameVersion -> ModID -> FilePath -> IO ()
-downloadModDeps = undefined
-
-downloadModsDeps :: GameVersion -> [ModID] -> FilePath -> IO ()
-downloadModsDeps = undefined
-
-getDeps :: 
+-- downloadMod :: GameVersion -> ModID -> FilePath -> IO ()
+-- downloadMod = undefined
+-- 
+-- downloadModDeps :: GameVersion -> ModID -> FilePath -> IO ()
+-- downloadModDeps = undefined
+-- 
+-- downloadModsDeps :: GameVersion -> [ModID] -> FilePath -> IO ()
+-- downloadModsDeps = undefined
+-- 
+-- getDeps :: 
 
 --------
 -- Network
@@ -126,4 +126,3 @@ downloadVersion dir (Version {..}) = forM_ verFiles $ \file -> when (filePrimary
 
 getProjectVersions :: Text -> IO (Maybe [Version])
 getProjectVersions projectID = decode <$> fetch ((param "game_versions" .~ ["[\"1.20.4\"]"]) . (param "loaders" .~ ["[\"fabric\"]"])) ("/project/" <> projectID <> "/version")
-
