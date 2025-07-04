@@ -38,7 +38,7 @@ jobs:
         with:
           path: |
             ./.stack-work
-            ${{ setup-haskell-stack.outputs.stack-root }}
+            ${{ steps.setup-haskell-stack.outputs.stack-root }}
           key: ${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('package.yaml') }}
           restore-keys: |
             ${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}
