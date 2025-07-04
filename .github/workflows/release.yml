@@ -36,7 +36,9 @@ jobs:
       - name: Cache ./.stack-work
         uses: actions/cache@v4
         with:
-          path: ./.stack-work
+          path: |
+            ./.stack-work
+            ${{ setup-haskell-stack.outputs.stack-root }}
           key: ${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}-${{ hashFiles('package.yaml') }}
           restore-keys: |
             ${{ runner.os }}-${{ hashFiles('stack.yaml.lock') }}
