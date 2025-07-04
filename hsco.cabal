@@ -1,6 +1,6 @@
 cabal-version: 2.0
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.35.2.
 --
 -- see: https://github.com/sol/hpack
 
@@ -28,7 +28,10 @@ source-repository head
 library
   exposed-modules:
       Hsco
+      Hsco.MC
   other-modules:
+      Hsco.MC.ModList
+      Hsco.MC.Modrinth
       Paths_hsco
   autogen-modules:
       Paths_hsco
@@ -39,13 +42,19 @@ library
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wmissing-deriving-strategies -fhide-source-paths
   build-depends:
       aeson
+    , async
     , base >=4.7 && <5
     , bytestring
+    , containers
+    , directory
+    , filepath
     , lens
     , lens-aeson
+    , optparse-applicative
     , relude
     , text
     , text-show
+    , unordered-containers
     , wreq
   mixins:
       base hiding (Prelude)
@@ -65,14 +74,20 @@ executable hsco
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wmissing-deriving-strategies -fhide-source-paths -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
+    , async
     , base >=4.7 && <5
     , bytestring
+    , containers
+    , directory
+    , filepath
     , hsco
     , lens
     , lens-aeson
+    , optparse-applicative
     , relude
     , text
     , text-show
+    , unordered-containers
     , wreq
   mixins:
       base hiding (Prelude)
@@ -93,14 +108,20 @@ test-suite hsco-test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wmissing-deriving-strategies -fhide-source-paths -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
+    , async
     , base >=4.7 && <5
     , bytestring
+    , containers
+    , directory
+    , filepath
     , hsco
     , lens
     , lens-aeson
+    , optparse-applicative
     , relude
     , text
     , text-show
+    , unordered-containers
     , wreq
   mixins:
       base hiding (Prelude)
@@ -121,15 +142,21 @@ benchmark hsco-benchmark
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wmissing-deriving-strategies -fhide-source-paths -threaded -rtspots -with-rtsopts=-N
   build-depends:
       aeson
+    , async
     , base >=4.7 && <5
     , bytestring
+    , containers
+    , directory
+    , filepath
     , gauge
     , hsco
     , lens
     , lens-aeson
+    , optparse-applicative
     , relude
     , text
     , text-show
+    , unordered-containers
     , wreq
   mixins:
       base hiding (Prelude)

@@ -28,6 +28,12 @@ dependencies:
 - text
 - text-show
 - bytestring
+- containers
+- unordered-containers
+- async
+- filepath
+- directory
+- optparse-applicative
 
 ghc-options:
 - -Wall
@@ -48,7 +54,9 @@ default-extensions:  OverloadedStrings
 
 library:
   source-dirs: src
-  exposed-modules: Hsco
+  exposed-modules:
+    - Hsco
+    - Hsco.MC
 
 executables:
   hsco:
