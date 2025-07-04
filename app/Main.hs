@@ -1,12 +1,63 @@
 module Main (main) where
 
 -- import Hsco (someFunc)
-import Hsco.MC (getProject, getProjectVersions, downloadVersion, title)
-import Hsco
+-- import Hsco.MC (loadModList, saveModList, genActions, procActions, ModList(..), ModListItem(..), Mod)
+import Hsco.MC
+
+import System.FilePath ((</>))
+import System.Directory (createDirectoryIfMissing)
+-- import System.IO (hFlush, stdout)
+import qualified Data.Text as T
+
+import Options.Applicative
+
+data Argument = Argument {
+    modsDirectory :: Text,
+    modListFile :: Text
+}
+
+parser :: Parser Argument
+parser = Argument <$> strOption (long "outdir" <> short 'o' <> metavar "DIRECTORY" <> help "the output directory")
+                  <*> strOption (long "file" <> short 'f' <> metavar "FILE" <> help "the mod list file")
+                  -- <$> strOption (long "version" <> long "ver" <> metavar "VERSION" <> help "minecraft game version (e.g. \"1.21.1\")")
+opts :: ParserInfo Argument
+opts = info (parser <**> helper) fullDesc
 
 main :: IO ()
 main = do
-    someFunc
+    options <- execParser opts
+    let generateModrinthManuals mods = flip map mods $ \identity -> ModListItem {
+            mlName = "",
+            mlSource = Modrinth,
+            mlIdentity = identity,
+            mlVersion = Nothing,
+            mlType = Manual
+        }
+    let modList = ModList {
+            gameVersion = "1.21.1",
+            modItems = generateModrinthManuals ["sodium", "xaeros-minimap"]
+        }
+
+    -- saveModList "modlist.txt" modList
+    res <- loadModList $ T.unpack (modListFile options)
+    let modList = case res of
+            Left _ -> ModList { gameVersion = "1.21.1", modItems = [] }
+            Right list -> list
+
+    createDirectoryIfMissing True (T.unpack $ modsDirectory options)
+
+    (actions, newList) <- genActions modList
+
+    showActions actions
+
+    putText "Continue? [y/n] " >> hFlush stdout
+
+    inp <- getLine
+
+    when (inp == "y") $ do
+        saveModList (T.unpack $ modListFile options) newList
+        procActions ((T.unpack $ modsDirectory options) </> "") actions
+
     pure ()
     -- let modList = ["fabric-api", "sodium", "iris", "lithium", "modmenu", "entityculling", "ferrite-core", "indium", "sodium-extra", "reeses-sodium-options", "immediatelyfast", "yacl", "memoryleakfix", "lambdynamiclights", "simple-voice-chat", "audioplayer", "sound-physics-remastered", "replay-voice-chat", "replaymod", "server-replay", "enhanced-groups"]
     -- -- let modList = ["fabric-api", "sodium"]

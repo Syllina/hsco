@@ -1,4 +1,15 @@
-module Hsco.MC (getProject, getProjectVersions, downloadVersion, Project(..)) where
+module Hsco.MC (
+    getProject,
+    getProjectVersions,
+    downloadVersion,
+    Project(..),
+
+    module Hsco.MC.ModList,
+    module Hsco.MC.Modrinth
+) where
+
+import Hsco.MC.ModList
+import Hsco.MC.Modrinth
 
 import Network.Wreq as W
 import Control.Lens
@@ -8,22 +19,6 @@ import qualified Data.Text as T (unpack)
 import TextShow
 
 import qualified Data.ByteString.Lazy as LBS
--- import qualified Data.Sequence as Seq
--- import qualified Data.Set as Set
-
--- newtype GameVersion = Text
--- newtype ModID = Text
-
--- downloadMod :: GameVersion -> ModID -> FilePath -> IO ()
--- downloadMod = undefined
--- 
--- downloadModDeps :: GameVersion -> ModID -> FilePath -> IO ()
--- downloadModDeps = undefined
--- 
--- downloadModsDeps :: GameVersion -> [ModID] -> FilePath -> IO ()
--- downloadModsDeps = undefined
--- 
--- getDeps :: 
 
 --------
 -- Network

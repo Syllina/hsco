@@ -30,6 +30,10 @@ dependencies:
 - bytestring
 - containers
 - unordered-containers
+- async
+- filepath
+- directory
+- optparse-applicative
 
 ghc-options:
 - -Wall

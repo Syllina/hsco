@@ -1,4 +1,4 @@
-module Hsco.MC.Modrinth (testModrinth) where
+module Hsco.MC.Modrinth (genActions, testModrinth) where
 
 -- TODO modrinth 提供了根据 hash 下载文件的接口
 
@@ -30,7 +30,7 @@ reqOptions = defaults & header "User-Agent" .~ [userAgent]
 -- only version
 newtype Env = Env Text
 
-type Modrinth = ReaderT Env IO
+type ModrinthM = ReaderT Env IO
 
 -- Step 1. 只保留所有手动安装的模组（的名字）
 -- Step 2. 迭代找到所有的依赖
@@ -42,7 +42,7 @@ getManualMods :: ModList -> S.HashSet Text
 getManualMods = S.fromList . map mlIdentity . filter isManual . modItems where
     isManual item = mlType item == Manual
 
-getDependencies :: S.HashSet Text -> Modrinth (S.HashSet Text)
+getDependencies :: S.HashSet Text -> ModrinthM (S.HashSet Text)
 getDependencies manual = proc initQueue S.empty where
     proc Q.Empty deps = pure deps
     proc (mod Q.:<| rem) deps = do
@@ -57,7 +57,7 @@ getDependencies manual = proc initQueue S.empty where
 
     initQueue = (Q.fromList . S.toList) manual
 
-getDependency :: Text -> Modrinth (Q.Seq Text)
+getDependency :: Text -> ModrinthM (Q.Seq Text)
 getDependency name = do
     Env gameVersion <- ask
     let opt = reqOptions & param "loaders" .~ ["[\"fabric\"]"] & param "game_versions" .~ ["[\"" <> gameVersion <> "\"]"]
@@ -65,18 +65,23 @@ getDependency name = do
 
     -- how to enter [{"deps": [{"prj": _}]}]
     let deps = result^.responseBody ^.. nth 0 . key "dependencies" . values . key "project_id" . _String
+        depTypes = result^.responseBody ^.. nth 0 . key "dependencies" . values . key "dependency_type" . _String
 
-    pure $ Q.fromList deps
+        deps' = map snd $ filter (\(t, _) -> t == "required") $ zip depTypes deps
+
+    pure $ Q.fromList deps'
 
 -- type ItemWithURL = (ModListItem, Text)
 type ItemWithURL = ModListItem
 
-getModList :: S.HashSet Text -> Modrinth (M.HashMap Text ItemWithURL)
-getModList = M.traverseWithKey func . S.toMap where
-    func name _ = getListItem name
+getModList :: (S.HashSet Text, S.HashSet Text) -> ModrinthM (M.HashMap Text ItemWithURL)
+getModList (manual, deps) = do
+    manualMap <- M.traverseWithKey getListItem . M.map (const Manual) . S.toMap $ manual
+    depsMap <- M.traverseWithKey getListItem . M.map (const Depended) . S.toMap $ deps
+    pure $ M.union manualMap depsMap
 
-getListItem :: Text -> Modrinth ItemWithURL
-getListItem name = do
+getListItem :: Text -> ModDownloadType -> ModrinthM ItemWithURL
+getListItem name modType = do
     result <- liftIO $ W.getWith reqOptions $ T.unpack $ urlRoot <> "/project/" <> name
     let body = result^.responseBody
         fullName = fromMaybe "unknown" $ body ^? key "title" . _String
@@ -95,22 +100,21 @@ getListItem name = do
 
     pure ModListItem {
             mlName = fullName,
-            mlSource = Hsco.MC.ModList.Modrinth,
+            mlSource = Modrinth,
             mlIdentity = identity,
-            mlVersion = Just (verID, url),
-            -- TODO assert all dep
-            mlType = Depended
+            mlVersion = Just (verID, url, file),
+            mlType = modType
         }
 
 modListToMap :: ModList -> M.HashMap Text ModListItem
 modListToMap = M.fromList . map (\item -> (mlIdentity item, item)) . modItems
 
-genActions :: ModList -> IO (Q.Seq ModAction)
+genActions :: ModList -> IO ((Q.Seq ModAction, ModList))
 genActions modList = flip runReaderT (Env (gameVersion modList)) $ do
     let manual = getManualMods modList
     deps <- getDependencies manual
 
-    versions <- getModList $ S.union manual deps
+    versions <- getModList (manual, deps)
 
     let oldMods = modListToMap modList
 
@@ -118,16 +122,16 @@ genActions modList = flip runReaderT (Env (gameVersion modList)) $ do
     let ret1 = M.foldl' step1 Q.empty oldMods
         step1 queue mod = case M.lookup (mlIdentity mod) versions of
             Just item | mlVersion mod == mlVersion item -> queue
-                      | otherwise -> queue Q.:|> ModAction (Just mod, Just item { mlType = mlType mod })
-            Nothing -> queue Q.:|> ModAction (Just mod, Nothing)
+                      | otherwise -> queue Q.:|> (Just mod, Just item { mlType = mlType mod })
+            Nothing -> queue Q.:|> (Just mod, Nothing)
 
     -- 处理新的模组
         ret2 = M.foldl' step2 ret1 versions
         step2 queue item = case M.lookup (mlIdentity item) oldMods of
             Just mod -> queue
-            Nothing -> queue Q.:|> ModAction (Nothing, Just item)
+            Nothing -> queue Q.:|> (Nothing, Just item)
 
-    pure ret2
+    pure (ret2, modList { modItems = map snd $ M.toList versions })
 
 testModrinth :: IO ()
 testModrinth = do
@@ -139,28 +143,27 @@ testModrinth = do
         gameVersion = "1.21.1",
         modItems = [ ModListItem {
             mlName = "",
-            mlSource = Hsco.MC.ModList.Modrinth,
+            mlSource = Modrinth,
             mlIdentity = "sodium",
             mlVersion = Nothing,
             mlType = Manual
         }, ModListItem {
             mlName = "",
-            mlSource = Hsco.MC.ModList.Modrinth,
+            mlSource = Modrinth,
             mlIdentity = "xaeros-minimap",
             mlVersion = Nothing,
             mlType = Manual
         } ]
     }
     -- result <- runReaderT (getDependencies (S.fromList ["sodium", "xaeros-minimap"])) (Env "1.21.1")
-    print result
     pure ()
 
--- 理论上不应该在模块里面写这种函数
--- （甚至有可能依赖别的平台？）
--- 但由于实际上在可见的将来我也不打算支持别的平台
-getModListDependencies :: ModList -> ([ModListItem], ModList)
-getModListDependencies modList = ([], modList) where
-    currentMods = M.fromList $ map (\m -> (mlIdentity m, m)) $ modItems modList
+-- -- 理论上不应该在模块里面写这种函数
+-- -- （甚至有可能依赖别的平台？）
+-- -- 但由于实际上在可见的将来我也不打算支持别的平台
+-- getModListDependencies :: ModList -> ([ModListItem], ModList)
+-- getModListDependencies modList = ([], modList) where
+--     currentMods = M.fromList $ map (\m -> (mlIdentity m, m)) $ modItems modList
 
 -- searchProjects :: 
 
